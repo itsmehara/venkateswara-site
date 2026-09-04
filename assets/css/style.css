@@ -76,6 +76,22 @@
   color-scheme: light;
 }
 
+/* Anton is a Latin poster face with no Telugu or Devanagari glyphs, so
+   headings would silently fall through to the body font's own fallback
+   chain in those scripts — readable, but visibly not "the house display
+   face" the way it is in English. Swapping both custom properties here
+   (fetched only for the active script, see ensureScriptFont() in site.js)
+   means every existing var(--display)/var(--body) rule in this file picks
+   the right typeface automatically, with no per-selector changes needed. */
+html.lang-te {
+  --display: "Noto Sans Telugu", "Manrope", sans-serif;
+  --body:    "Noto Sans Telugu", ui-sans-serif, system-ui, sans-serif;
+}
+html.lang-hi {
+  --display: "Noto Sans Devanagari", "Manrope", sans-serif;
+  --body:    "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
+}
+
 /* ---------- 2. Reset ----------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -496,6 +512,35 @@ p:last-child { margin-bottom: 0; }
 }
 .site-nav .nav-cta:hover { background: var(--red-deep); }
 
+/* .site-nav only had one child (the <ul>) before the language switcher; it
+   needs its own flex row now so the switcher sits beside the links on
+   desktop instead of stacking under them by block default. */
+.site-nav { display: flex; align-items: center; gap: 1rem; }
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  flex-wrap: wrap;
+}
+.lang-switch button {
+  padding: .35rem .6rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.2;
+}
+.lang-switch button:hover { border-color: var(--ink); color: var(--ink); }
+.lang-switch button[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
 .nav-toggle {
   display: none;
   align-items: center;
@@ -541,9 +586,11 @@ p:last-child { margin-bottom: 0; }
     transition: all var(--dur) var(--ease);
   }
   .site-nav.is-open { transform: none; opacity: 1; visibility: visible; }
+  .site-nav { flex-direction: column; align-items: stretch; }
   .site-nav ul { flex-direction: column; align-items: stretch; gap: .15rem; }
   .site-nav a { padding: .85rem 1rem; font-size: .95rem; border-radius: var(--r); }
   .site-nav .nav-cta { margin: .5rem 0 0; text-align: center; }
+  .lang-switch { justify-content: center; padding: .75rem 0 .25rem; border-top: 1px solid var(--line); margin-top: .5rem; }
 }
 
 /* ---------- 8. Hero ------------------------------------------------------ */
@@ -1468,6 +1515,72 @@ p:last-child { margin-bottom: 0; }
 }
 .checklist strong { color: var(--ink); }
 
+/* ---------- 10c. Get a Quote form ------------------------------------------ */
+/* A structured alternative to typing a WhatsApp message freehand. It never
+   submits anywhere — there is no backend — it only assembles the same kind
+   of message the floating enquiry drawer sends, then opens WhatsApp with it
+   ready to review and send. */
+.quote-form {
+  margin-top: 2.2rem;
+  padding: clamp(1.5rem, 3.5vw, 2.4rem);
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+.quote-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem 1.4rem;
+}
+.field { display: flex; flex-direction: column; }
+.field--wide { grid-column: 1 / -1; }
+.field label {
+  margin-bottom: .4rem;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.field label span { color: var(--red); }
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: .65rem .85rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: .92rem;
+}
+.field textarea { resize: vertical; min-height: 2.6rem; }
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  background: var(--white);
+}
+.field-error {
+  margin: .35rem 0 0;
+  font-size: .74rem;
+  color: var(--red-deep);
+}
+.field.has-error input,
+.field.has-error select,
+.field.has-error textarea {
+  border-color: var(--red-deep);
+}
+.quote-form .quote-send { margin-top: 1.6rem; }
+.quote-form .quote-disclaimer { margin-top: .7rem; }
+
+@media (max-width: 620px) {
+  .quote-form-grid { grid-template-columns: 1fr; }
+}
+
 /* ---------- 11. Footer --------------------------------------------------- */
 .site-footer {
   position: relative;
@@ -1616,16 +1729,24 @@ p:last-child { margin-bottom: 0; }
   60%      { transform: translateY(0) scale(.99); }
 }
 
-/* The panel that opens above the dock. */
+/* The panel that opens above the dock. Sized to its content rather than
+   forced to fill a fixed box — the old version gave the list a flex:1 share
+   of a tall, fixed-height panel, so a two-field footer could squeeze the
+   empty-state message down to a sliver and clip it. Now the panel itself is
+   the thing that scrolls if it ever runs out of vertical room (a very short
+   viewport, or many items in the list); the list only gets its own scroll
+   region once it is genuinely long. */
 .quote-panel {
   position: fixed;
   right: clamp(.9rem, 2.5vw, 1.6rem);
   bottom: calc(clamp(.9rem, 2.5vw, 1.6rem) + 140px);
   z-index: 71;
-  width: min(calc(100vw - 1.8rem), 380px);
-  max-height: min(68vh, 560px);
+  width: min(calc(100vw - 1.8rem), 360px);
+  max-height: min(80vh, 600px);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--white);
   border: 2px solid var(--ink);
   border-radius: var(--r-lg);
@@ -1643,105 +1764,126 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.1rem .9rem;
+  padding: .75rem .9rem .6rem;
   border-bottom: 1px solid var(--line);
+  flex: none;
 }
-.quote-head h2 { margin: 0; font-size: 1.15rem; }
+.quote-head h2 { margin: 0; font-size: 1rem; }
 .quote-close {
   display: grid;
   place-items: center;
-  width: 36px; height: 36px;
+  width: 32px; height: 32px;
   border: 0;
   border-radius: 50%;
   background: var(--paper-2);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   line-height: 1;
+  flex: none;
 }
 .quote-close:hover { background: var(--paper-3); }
 
 .quote-items {
   margin: 0;
-  padding: .6rem;
+  padding: .4rem;
   list-style: none;
-  overflow: auto;
+  overflow-y: auto;
   overscroll-behavior: contain;
-  flex: 1;
+  max-height: min(34vh, 300px);
+  flex: none;
 }
 .quote-item {
   display: grid;
-  grid-template-columns: 54px 1fr auto;
-  gap: .7rem;
+  grid-template-columns: 44px 1fr auto;
+  gap: .6rem;
   align-items: center;
-  padding: .55rem;
+  padding: .4rem;
   border-radius: var(--r);
 }
 .quote-item + .quote-item { border-top: 1px solid var(--line); }
 .quote-item img {
-  width: 54px; height: 54px;
+  width: 44px; height: 44px;
   object-fit: cover;
   border-radius: var(--r-sm);
   background: var(--paper-2);
 }
-.quote-item-name { font-size: .88rem; font-weight: 700; line-height: 1.3; }
-.quote-item-meta { font-size: .72rem; color: var(--ink-faint); }
+.quote-item-name { font-size: .84rem; font-weight: 700; line-height: 1.25; }
+.quote-item-meta { font-size: .7rem; color: var(--ink-faint); }
 .quote-remove {
-  width: 32px; height: 32px;
+  width: 30px; height: 30px;
   border: 0;
   border-radius: 50%;
   background: transparent;
   color: var(--ink-faint);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1;
+  flex: none;
 }
 .quote-remove:hover { background: rgba(216, 35, 42, .12); color: var(--red); }
 
 .quote-empty {
-  padding: 2.2rem 1.4rem;
+  padding: 1.1rem 1rem;
   text-align: center;
   color: var(--ink-faint);
   font-size: var(--step--1);
+  line-height: 1.5;
 }
-.quote-empty strong { display: block; color: var(--ink); margin-bottom: .35rem; }
+.quote-empty strong { display: block; color: var(--ink); margin-bottom: .3rem; font-size: .92rem; }
 
 .quote-foot {
-  padding: .9rem 1.1rem 1.1rem;
+  padding: .65rem .9rem .8rem;
   border-top: 1px solid var(--line);
   background: var(--paper);
   border-radius: 0 0 calc(var(--r-lg) - 2px) calc(var(--r-lg) - 2px);
   display: grid;
-  gap: .7rem;
+  gap: .5rem;
+  flex: none;
 }
 .quote-foot label {
-  font-size: .68rem;
+  display: block;
+  margin-bottom: .25rem;
+  font-size: .64rem;
   font-weight: 800;
-  letter-spacing: .13em;
+  letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
 .quote-foot textarea,
 .quote-foot input {
   width: 100%;
-  padding: .6rem .8rem;
+  padding: .45rem .65rem;
   border: 1px solid var(--line-strong);
   border-radius: var(--r);
   background: var(--white);
-  font-size: .9rem;
+  font-size: .85rem;
+  line-height: 1.35;
   resize: vertical;
 }
+.quote-foot textarea { min-height: 2.3rem; }
 .quote-send {
+  min-height: 42px;
+  padding: 0 1rem;
+  font-size: .78rem;
   background: #25d366;
   border-color: #25d366;
   color: #06331a;
 }
 .quote-send:hover { background: #1eb856; border-color: #1eb856; }
-.quote-send svg { width: 19px; height: 19px; }
+.quote-send svg { width: 17px; height: 17px; }
+.quote-disclaimer {
+  margin: 0;
+  text-align: center;
+  font-size: .68rem;
+  line-height: 1.4;
+}
 
 @media (max-width: 560px) {
   .quote-panel {
     right: .9rem; left: .9rem;
     width: auto;
+    max-height: min(72vh, 520px);
     bottom: calc(.9rem + 132px);
   }
+  .quote-items { max-height: 30vh; }
   .quote-fab { padding: 0 1rem; }
   .quote-fab .fab-text { display: none; }
 }
