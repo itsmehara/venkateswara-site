@@ -1,0 +1,629 @@
+/* =========================================================================
+   Sri Venkateswara — the design book
+   -------------------------------------------------------------------------
+   A workshop sample book: the piece on the left leaf, its notes on the
+   right, and one sheet of paper that lifts from one side and lays itself
+   down on the other exactly as a real page does.
+
+   The page-turn mechanism is carried over from the Venuka sketchbook — one
+   hinged sheet with two faces, rather than two half-pages taking turns —
+   because that is the part that reads as a book instead of a slideshow.
+   The paper here is a printer's sample book, not a child's sketchbook, so
+   the stock is cooler, the rules are harder, and the ink is the house red.
+
+   Loaded only by sketchbook.html.
+
+   Sections: 1 Tokens  2 Desk & book  3 Paper  4 Plate  5 Notes
+             6 Page turn  7 Tools  8 Index  9 Responsive
+   ========================================================================= */
+
+/* ---------- 1. Tokens ---------------------------------------------------- */
+.sketchbook {
+  /* Pearl linen — fourth material, and the one that actually stuck. Marble
+     (in three different attempts: CSS-gradient red, a real red photo, then
+     a pale grey photo) kept reading as a slab of stone no matter how the
+     legibility problems were fixed, because a slab of stone is what marble
+     is. A textile sample book showing textile-printed pieces calling
+     itself a fabric — fine linen weave, warm pearl-ivory — is the material
+     this book was always describing. Reference mockup:
+     images/processed/design-book-texture-study/finalist-round-2/
+     mockup-a-pearl-linen.png. Every token below is tuned for that: black
+     type, muted antique gold for the small print, the house red kept but
+     used sparingly, same as the mockup. */
+  --sb-paper:     #e7e0d1;
+  --sb-paper-lit: #f3eee2;
+  --sb-paper-dim: #d3cabb;
+  --sb-ink:       var(--ink);
+  --sb-ink-soft:  #3a332c;
+  --sb-ink-faint: #6b6156;
+  --sb-gold:      #8f6a2e;
+  --sb-rule:      rgba(22, 18, 15, .2);
+  /* Lighter than --sb-rule on purpose — that one also frames the photo,
+     where it needs to read clearly as a mount edge; these are just internal
+     dividers (the hr under the title, the dotted lines between meta rows),
+     which the mockup keeps much quieter. */
+  --sb-divider:   rgba(22, 18, 15, .1);
+  --sb-edge:      #8a4a30;
+
+  --sb-turn: .9s;
+  --sb-ease: cubic-bezier(.36, .06, .28, 1);
+
+  container-type: inline-size;
+  display: block;
+}
+
+/* ---------- 2. Desk & book ----------------------------------------------- */
+/* This file loads only on sketchbook.html (see the header comment), so
+   these two overrides of the shared .page-hero/.section--tight classes are
+   safe here — they cannot leak onto about/services/work/contact, which use
+   the same classes at their normal size but never load this stylesheet.
+   The intro copy was pushing the book almost a full screen down before a
+   visitor saw it turn a single page; this keeps the copy but trims the
+   padding around it so the book sits inside the first screen on common
+   desktop heights instead of requiring a scroll to reach it. */
+.page-hero { padding: clamp(1.25rem, 2.5vw, 2rem) 0 clamp(1rem, 2vw, 1.5rem); }
+/* Only one .section--tight exists on this page (the one wrapping the
+   book), so this doesn't need a more specific selector to stay scoped. */
+.section--tight { padding-top: clamp(1rem, 2vw, 1.5rem); }
+
+.sb-desk { position: relative; padding: clamp(.5rem, 2vw, 1.25rem) 0; }
+.sb-stage { perspective: 2200px; perspective-origin: 50% 42%; }
+
+/* Takes what the window will give it in both directions, so a short wide
+   screen gets a book that still fits rather than one running off the bottom.
+   Floored, because a laptop's 900px would otherwise shrink it too far. */
+.sb-book {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Wider and shallower than a novel — a printer's sample book is landscape,
+     and the shorter it is the more of it clears the sticky header and the
+     floating dock without scrolling. */
+  /* Shorter again. The notes leaf already scrolls on its own (its longest
+     copy — the description plus three meta rows — needs more height than a
+     shallow book gives it), so a book this shallow costs nothing there; the
+     plate leaf is the only thing that visibly loses height, and the fill
+     crop on the one plate that needed the room absorbs that. */
+  aspect-ratio: 16 / 6.6;
+  /* A little smaller across the board (was 1420/1120px) — the mockup's
+     book doesn't run edge-to-edge the way this one was, and a narrower cap
+     also leaves more of the shortened intro band's saving actually visible
+     as breathing room instead of the book just expanding to eat it. */
+  width: min(100%, 1280px, max(1000px, (100vh - 9rem) * 2.1));
+  margin-inline: auto;
+  transform-style: preserve-3d;
+  transform: rotateX(1.6deg);
+  /* Softer float than before (was 26px/38px at .34) — restrained shadows
+     per the brief; this is still enough lift to read as an object sitting
+     on the page, not pasted flat onto it. */
+  filter: drop-shadow(0 16px 26px rgba(22, 18, 15, .22));
+}
+
+/* The block of unturned pages showing along both outer edges — the same
+   linen photo the leaves use, tiled small, with a fine ridge pattern over
+   it standing in for many stacked sheet-edges. A flat colour hatch stood
+   in for this before; the brief specifically asks for the real texture
+   here too, not just on the two open leaves. */
+.sb-book::before,
+.sb-book::after {
+  content: "";
+  position: absolute;
+  top: 1.2%; bottom: 1.2%;
+  width: 10px;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(180deg, rgba(22, 18, 15, .16) 0 1px, transparent 1px 3px),
+    url("../img/sketchbook/linen-bg.jpg?v=1");
+  background-size: 100% auto, 120px 120px;
+  background-repeat: repeat, repeat;
+  box-shadow: 0 6px 14px rgba(22, 18, 15, .18);
+}
+.sb-book::before { left: -9px; }
+.sb-book::after  { right: -9px; }
+
+/* ---------- 3. Paper ----------------------------------------------------- */
+/* Pearl linen (images/processed/design-book-texture-study/finalist-round-2/
+   texture-a-pearl-linen-darker.jpg) — a real photographed fabric weave,
+   tiled rather than stretched: at 2048px the source is too detailed to
+   cover a whole leaf without either blurring past recognition or being so
+   zoomed out the weave disappears, so it repeats at roughly life-size
+   instead, the way a real bound sample book's cloth would actually read
+   up close. Fourth material for this book (after two CSS-gradient marbles
+   and two photographed ones) — the first one that isn't standing in for
+   "a fancy surface" in the abstract: this is a *textile* sample book
+   showing *textile*-printed pieces, so fabric is the material it was
+   always describing.
+
+   Restrained on purpose, per the brief this was built from: the previous
+   marble version leaned on strong gloss/shadow gradients (up to .42
+   opacity) to read as a lit 3D object. Linen doesn't need nearly as much —
+   it's already got its own tonal life from the weave — so these are much
+   quieter (.08–.14) and there are fewer of them. The flat wash is the
+   "very light warm translucent overlay" the brief allows for readability
+   insurance; it is deliberately not strong enough to flatten the weave. */
+.sb-leaf {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(40% 32% at 20% 16%, rgba(255, 255, 255, .14), transparent 74%),
+    radial-gradient(46% 36% at 78% 84%, rgba(0, 0, 0, .1), transparent 76%),
+    linear-gradient(rgba(255, 253, 246, .12), rgba(255, 253, 246, .12)),
+    url("../img/sketchbook/linen-bg.jpg?v=1");
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-size: auto, auto, auto, 512px 512px;
+  background-position: center, center, center, center;
+  box-shadow: inset 0 0 36px rgba(22, 18, 15, .1);
+}
+
+.sb-leaf--left  { border-radius: 5px 2px 2px 5px; }
+.sb-leaf--right { border-radius: 2px 5px 5px 2px; }
+
+.sb-leaf--left::after,
+.sb-leaf--right::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 13%;
+  pointer-events: none;
+}
+.sb-leaf--left::after  { right: 0; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, .4)); }
+.sb-leaf--right::after { left: 0;  background: linear-gradient(270deg, transparent, rgba(0, 0, 0, .4)); }
+
+.sb-spine {
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  width: 16px;
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    rgba(0, 0, 0, .55), rgba(0, 0, 0, .1) 42%,
+    rgba(255, 255, 255, .22) 50%,
+    rgba(0, 0, 0, .1) 58%, rgba(0, 0, 0, .55));
+}
+.sb-spine::after {
+  content: "";
+  position: absolute;
+  inset: 7% 45%;
+  border-radius: 2px;
+  background: repeating-linear-gradient(180deg,
+    rgba(224, 176, 100, .5) 0 10px, transparent 10px 22px);
+}
+
+/* ---------- 4. Plate (the piece) ----------------------------------------- */
+.sb-plate {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  margin: 0;
+  /* Trimmed hard: on a shallower book every millimetre of padding comes
+     straight off the picture. */
+  padding: clamp(.5rem, 1.2cqi, .9rem) clamp(.6rem, 1.6cqi, 1.1rem)
+           clamp(.4rem, 1cqi, .7rem) clamp(.6rem, 1.6cqi, 1.1rem);
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+/* The frame itself carries the margin now (consistent padding on every
+   side, any piece, any aspect ratio) instead of the previous per-image
+   outline-offset, which only worked because the image was intrinsically
+   sized — object-fit:contain images fill their box exactly, so the box
+   needs to already be smaller than the leaf by a fixed amount. */
+.sb-plate-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: clamp(10px, 2cqi, 22px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  outline: 1px solid var(--sb-rule);
+  outline-offset: -1px;
+}
+
+/* object-fit:contain, always — a piece so much taller than the leaf that
+   it would once have been cropped (bookFit:"fill" in data.js) just sits
+   smaller within the same consistent margin instead now. A customer is
+   judging a garment here, so the whole garment stays in view no matter
+   its proportions; that matters more than filling the frame edge to edge. */
+.sb-plate-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: saturate(.99) contrast(1.02);
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.sb-plate-caption {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  /* Was space-between across two spans (a plate number, the provenance
+     badge); the number moved to the facing page as "Project NN / MM" so
+     it wasn't showing twice, leaving one child here — flex-end keeps the
+     badge where it always visually sat, at the outer edge, rather than
+     letting a single remaining flex child default to the other end. */
+  justify-content: flex-end;
+  gap: 1rem;
+  font-size: clamp(.6rem, 1.2cqi, .72rem);
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sb-ink-faint);
+  /* A light halo, not a dark one — this text is dark now (light marble
+     flipped the whole scheme), so the insurance it needs is against a dark
+     vein cluster passing behind it, not a bright one. */
+  text-shadow: 0 1px 1px rgba(255, 253, 246, .8);
+}
+/* Gold rather than the house red (--red) — kept consistent with the notes
+   kicker below rather than reverting now that the marble isn't red-hued
+   any more, and it still reads clearly across this pale marble's range,
+   with the dark shadow giving it an edge over the brighter stretches. */
+.sb-plate-caption .is-mock {
+  color: var(--sb-gold);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+}
+
+/* ---------- 5. Notes (the facing page) ----------------------------------- */
+.sb-notes {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1.1rem, 3.4cqi, 2.4rem) clamp(1rem, 3cqi, 2.2rem)
+           clamp(1.1rem, 3.4cqi, 2.4rem) clamp(1.5rem, 4.4cqi, 3rem);
+  color: var(--sb-ink);
+  /* Insurance against a dark marble vein passing directly behind a word —
+     the light scrim on .sb-leaf handles the general case, this catches the
+     rest. A light halo, not a dark one: this text is dark-on-light now. */
+  text-shadow: 0 1px 1px rgba(255, 253, 246, .8);
+}
+
+.sb-notes-kicker {
+  margin: 0 0 .5rem;
+  font-size: clamp(.64rem, 1.5cqi, .76rem);
+  font-weight: 800;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--sb-gold);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
+}
+
+.sb-notes h3 {
+  margin: 0 0 .6rem;
+  font-family: var(--display);
+  font-size: clamp(1.4rem, 4.6cqi, 2.3rem);
+  line-height: 1;
+  color: var(--sb-ink);
+}
+
+.sb-rule {
+  border: 0;
+  border-top: 1px solid var(--sb-divider);
+  margin: 1rem 0;
+}
+
+.sb-notes-desc {
+  font-size: clamp(.86rem, 2cqi, 1rem);
+  line-height: 1.6;
+  font-weight: 600;
+  color: var(--sb-ink-soft);
+}
+
+.sb-notes-meta {
+  margin: 1.2rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .6rem;
+}
+.sb-notes-meta li {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: .8rem;
+  font-size: clamp(.76rem, 1.7cqi, .88rem);
+  padding-bottom: .6rem;
+  border-bottom: 1px dotted var(--sb-divider);
+}
+.sb-notes-meta .k {
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sb-ink-faint);
+}
+.sb-notes-meta .v { color: var(--sb-ink); font-weight: 600; }
+
+.sb-notes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-top: 1.5rem;
+}
+
+/* ---------- 6. Page turn -------------------------------------------------- */
+/* One sheet of paper hinged on the spine. Its front face is the page you
+   were reading, its back face the page you are turning to, so a single
+   sweep crosses the whole book instead of two halves taking turns. */
+.sb-sheet {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 50%;
+  z-index: 3;
+  display: none;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.sb-sheet.is-visible { display: block; }
+.sb-sheet.from-right { left: 50%;  transform-origin: left center; }
+.sb-sheet.from-left  { right: 50%; transform-origin: right center; }
+
+.sb-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 14px 34px -12px rgba(22, 18, 15, .5);
+}
+.sb-face--back { transform: rotateY(180deg); }
+.sb-face > .sb-leaf { position: absolute; inset: 0; }
+
+/* Shading that moves with the sweep: the face turning away darkens, the one
+   arriving lightens. Opacity is animated from script alongside the sheet. */
+.sb-face-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .05), rgba(0, 0, 0, .6));
+}
+.sb-sheet.from-left .sb-face-shade {
+  background: linear-gradient(270deg, rgba(0, 0, 0, .05), rgba(0, 0, 0, .6));
+}
+
+/* ---------- 7. Turning the page ------------------------------------------- */
+/* The two arrows sit on the book itself, at the outer edge of each leaf,
+   where a thumb would go to lift a page. Black discs on cream paper: the
+   strongest contrast on the page, and they read as controls rather than as
+   more of the printing. The row is inert; only the buttons take the pointer,
+   so the paper underneath is still clickable. */
+.sb-nav-row {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(8px, 1.4vw, 20px);
+  pointer-events: none;
+}
+
+/* No border ring and a softer shadow than the marble version had — the
+   mockup's arrows read as clean solid discs, not a control welded onto a
+   busy surface, which fits the calmer, more editorial finish the rest of
+   this page is going for now. */
+.sb-nav {
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: 54px; height: 54px;
+  padding: 0 0 4px;                 /* the chevron glyph sits high in its box */
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 2rem;
+  line-height: 1;
+  box-shadow: 0 4px 14px -4px rgba(22, 18, 15, .45);
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease),
+              opacity var(--dur) var(--ease);
+}
+.sb-nav:hover:not(:disabled) { background: var(--red); transform: scale(1.08); }
+.sb-nav:active:not(:disabled) { transform: scale(.96); }
+/* Kept in place rather than removed, so the pair never jumps sideways when
+   you reach the first or last plate. */
+.sb-nav:disabled { opacity: .22; cursor: not-allowed; box-shadow: none; }
+/* A dark disc on linen has no built-in affordance for keyboard focus the
+   way a form control does, so this needs to be explicit rather than left
+   to the browser default (which some engines barely render against a
+   filled circle). Offset outward so the ring doesn't fight the disc's own
+   edge or the shadow. */
+.sb-nav:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+
+.sb-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1.25rem;
+}
+
+/* The thin progress track under the counter, from the pearl-linen mockup —
+   purely decorative (aria-hidden), since the counter text right above it
+   and the live-region announcement already carry this same information
+   accessibly; this would just be a second, redundant announcement. */
+.sb-progress {
+  width: min(100%, 14rem);
+  height: 2px;
+  background: var(--line-strong);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+.sb-progress span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: var(--r-pill);
+  transition: width var(--dur) var(--ease);
+}
+
+/* Still used by the two buttons inside the notes leaf. */
+.sb-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: .5rem 1.1rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: var(--white);
+  color: var(--ink);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--dur) var(--ease);
+}
+.sb-tool:hover:not(:disabled) { background: var(--ink); color: var(--paper); transform: translateY(-1px); }
+.sb-tool:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+.sb-tool:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+
+/* Add to enquiry is the action that actually moves someone toward a quote;
+   View full size is just a closer look. Solid red vs. outlined makes that
+   difference legible at a glance instead of two equally-weighted buttons
+   asking to be read before you know which one matters more. */
+.sb-tool--primary {
+  border-color: var(--red);
+  background: var(--red);
+  color: var(--white);
+}
+.sb-tool--primary:hover:not(:disabled) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.sb-tool--primary:focus-visible { outline-color: var(--ink); }
+
+.sb-counter {
+  margin: 0;
+  min-width: 10rem;
+  text-align: center;
+  font-size: .84rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.sb-hint {
+  margin: .9rem 0 0;
+  text-align: center;
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+/* ---------- 8. Index ------------------------------------------------------ */
+.sb-index {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .4rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sb-index button {
+  display: flex;
+  align-items: baseline;
+  gap: .45rem;
+  padding: .42rem .9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--white);
+  font-size: .82rem;
+  font-weight: 600;
+  transition: all var(--dur) var(--ease);
+}
+.sb-index button:hover { border-color: var(--ink); }
+.sb-index button[aria-current="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.sb-index .n {
+  font-size: .76em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+.sb-index button[aria-current="true"] .n { color: rgba(247, 243, 234, .65); }
+
+/* ---------- 9. Responsive -------------------------------------------------- */
+/* Under 760px the leaves stop being side by side: the plate keeps the paper
+   and the notes sit beneath it, still on paper, still one sheet. There is no
+   page to turn in 3D at that width, so the sheet is dropped entirely. */
+@media (max-width: 760px) {
+  .sb-book {
+    grid-template-columns: 1fr;
+    aspect-ratio: auto;
+    width: 100%;
+    transform: none;
+  }
+  .sb-leaf--left  { border-radius: 5px 5px 0 0; }
+  .sb-leaf--right { border-radius: 0 0 5px 5px; }
+  .sb-leaf--left::after, .sb-leaf--right::after { display: none; }
+  .sb-spine, .sb-book::before, .sb-book::after { display: none; }
+  .sb-plate-frame { aspect-ratio: 4 / 3; }
+  .sb-notes { overflow: visible; }
+  .sb-notes-meta li { grid-template-columns: 1fr; gap: .1rem; }
+
+  /* Moved onto the picture itself rather than sitting below the whole
+     stacked book (plate, then notes, then arrows) — the owner's ask, so a
+     thumb reaches "next" right where the image is instead of scrolling past
+     the notes first. .sb-nav-row keeps the absolute positioning it has on
+     desktop, but is now sized to just the plate's own height rather than the
+     full book: it shares the same aspect-ratio as .sb-plate-frame, so at the
+     same width it computes to very close to the same height, without either
+     element needing to know the other's actual rendered size. */
+  .sb-nav-row {
+    position: absolute;
+    inset: 0 0 auto 0;
+    aspect-ratio: 4 / 3;
+    height: auto;
+    justify-content: space-between;
+    padding: 0 .6rem;
+    margin-top: 0;
+  }
+  /* 44px, not the previous 42px — the minimum comfortable touch target,
+     and it's the one place on the page mobile visitors will tap most. */
+  .sb-nav { width: 44px; height: 44px; }
+}
+
+/* ---------- 9b. The upward turn (phones) ---------------------------------- */
+/* On a phone the leaves are stacked, so there is no spine to hinge on and a
+   sideways turn would swing the page off the screen. The plate flips up
+   instead, hinged along its top edge the way a flip-chart or a spiral pad
+   turns. The script measures the plate and positions the sheet over it, so
+   the box is set inline; only the hinge and the faces live here. */
+.sb-sheet.is-up {
+  left: 0;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  transform-origin: center top;
+}
+.sb-sheet.is-up .sb-face--back { transform: rotateX(180deg); }
+.sb-sheet.is-up .sb-face-shade,
+.sb-sheet.is-up.from-left .sb-face-shade {
+  background: linear-gradient(180deg, rgba(0, 0, 0, .6), rgba(0, 0, 0, .05));
+}
+.sb-sheet.is-up .sb-leaf { border-radius: 5px 5px 0 0; }
+
+/* A turning page is a pleasure; it is also motion. Respect the setting. */
+@media (prefers-reduced-motion: reduce) {
+  .sb-sheet { display: none !important; }
+}

@@ -1,0 +1,1833 @@
+/* =========================================================================
+   Sri Venkateswara Screen & Textile Printing Works
+   -------------------------------------------------------------------------
+   The whole site's styling. No framework, no build step, nothing to install:
+   this file and two small scripts are the site.
+
+   The look comes from the trade itself. A screen print is ink pressed
+   through mesh, one colour at a time, each colour on its own screen. When
+   the screens sit a hair out of true you get misregistration — a red ghost
+   peeking out from behind the black. Printers chase it away; here it is the
+   house signature, used deliberately on headings and nowhere else.
+
+   Everything textural is drawn with gradients — halftone dots, ink grain,
+   registration marks — so there is not one decorative image to download.
+
+   Sections: 1 Tokens  2 Reset  3 Type  4 Layout  5 Ink motifs  6 Buttons
+             7 Header  8 Hero  9 Cards  10 Sections  11 Footer
+             12 Quote dock  13 Lightbox  14 Motion  15 Print
+   ========================================================================= */
+
+/* ---------- 1. Tokens ---------------------------------------------------- */
+:root {
+  /* Ink. Not pure black — printing ink on cloth never is. */
+  --ink:          #16120f;
+  --ink-2:        #2a231e;
+  --ink-soft:     #5b5048;
+  --ink-faint:    #8a7d72;
+
+  /* The two colours off the shop's own logo and card. */
+  --red:          #d8232a;
+  --red-deep:     #a8161c;
+  --red-lit:      #ff8a7d;   /* the same ink laid thinner — for ghosting red on red */
+  --red-glow:     rgba(216, 35, 42, .32);
+  --blue:         #1b2fb5;
+
+  /* Paper. Warm, because cloth and card are warm. */
+  --paper:        #f7f3ea;
+  --paper-2:      #efe8db;
+  --paper-3:      #e3d9c8;
+  --white:        #fffdf9;
+
+  --line:         rgba(22, 18, 15, .14);
+  --line-strong:  rgba(22, 18, 15, .28);
+
+  /* Type. Anton is a poster face — it is the condensed shout you see
+     screen printed across the front of a tee. Manrope reads underneath it. */
+  --display: "Anton", "Haettenschweiler", "Arial Narrow", sans-serif;
+  --body:    "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* A fluid scale, so nothing needs a breakpoint to stay in proportion. */
+  --step--1: clamp(.82rem, .78rem + .2vw, .93rem);
+  --step-0:  clamp(1rem, .95rem + .25vw, 1.13rem);
+  --step-1:  clamp(1.25rem, 1.15rem + .5vw, 1.6rem);
+  --step-2:  clamp(1.7rem, 1.45rem + 1.2vw, 2.6rem);
+  --step-3:  clamp(2.3rem, 1.8rem + 2.4vw, 4rem);
+  --step-4:  clamp(3rem, 2rem + 4.6vw, 6.5rem);
+
+  --wrap:    1240px;
+  --wrap-narrow: 780px;
+
+  --r-sm: 4px;
+  --r:    10px;
+  --r-lg: 18px;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(22, 18, 15, .1);
+  --shadow:    0 6px 20px -8px rgba(22, 18, 15, .38);
+  --shadow-lg: 0 24px 60px -22px rgba(22, 18, 15, .55);
+
+  --dur: .28s;
+  --ease: cubic-bezier(.22, .61, .36, 1);
+
+  --header-h: 74px;
+  --ticker-h: 60px;
+
+  color-scheme: light;
+}
+
+/* ---------- 2. Reset ----------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img, svg, video { display: block; max-width: 100%; }
+img { height: auto; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px; left: 1rem;
+  z-index: 999;
+  padding: .7rem 1.2rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+  border-radius: 0 0 var(--r) var(--r);
+  transition: top var(--dur) var(--ease);
+}
+.skip-link:focus { top: 0; }
+
+/* ---------- 3. Type ------------------------------------------------------ */
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  font-weight: 400;
+  line-height: .96;
+  letter-spacing: .005em;
+  text-transform: uppercase;
+  margin: 0 0 .5em;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--step-3); }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); letter-spacing: .02em; }
+h4 { font-size: var(--step-0); letter-spacing: .06em; }
+
+p { margin: 0 0 1em; text-wrap: pretty; }
+p:last-child { margin-bottom: 0; }
+
+/* The house signature. A red screen sitting a hair behind the black one,
+   exactly the way a two-colour job looks when the registration is off by a
+   thread. Drawn with a shadow, so the text stays real text — selectable,
+   searchable, and readable to a screen reader. */
+.misreg {
+  position: relative;
+  text-shadow:
+    .045em .045em 0 var(--red),
+   -.012em -.012em 0 rgba(27, 47, 181, .55);
+}
+.misreg--tight { text-shadow: .03em .03em 0 var(--red); }
+
+/* Knocked-out type: the paper showing through the ink. */
+.knockout {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--ink);
+  text-stroke: 2px var(--ink);
+}
+.on-ink .knockout { -webkit-text-stroke-color: var(--paper); text-stroke-color: var(--paper); }
+
+/* The little label above a heading — set like a job-sheet reference. */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  margin: 0 0 1rem;
+  font-family: var(--body);
+  font-size: var(--step--1);
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.kicker::before {
+  content: "";
+  width: 2.2rem; height: 2px;
+  background: currentColor;
+}
+.on-ink .kicker { color: #ff6b6b; }
+
+.lede {
+  font-size: var(--step-1);
+  line-height: 1.45;
+  color: var(--ink-soft);
+  max-width: 46ch;
+}
+.on-ink .lede { color: rgba(247, 243, 234, .78); }
+
+.muted { color: var(--ink-soft); }
+.small { font-size: var(--step--1); }
+
+/* ---------- 4. Layout ---------------------------------------------------- */
+.wrap {
+  width: min(100% - 2.5rem, var(--wrap));
+  margin-inline: auto;
+}
+.wrap--narrow { max-width: var(--wrap-narrow); }
+
+.section { padding: clamp(3.5rem, 8vw, 7rem) 0; position: relative; }
+.section--tight { padding: clamp(2.5rem, 5vw, 4rem) 0; }
+
+/* Ink sections: the press run, white cloth to black. */
+.on-ink {
+  background: var(--ink);
+  color: var(--paper);
+}
+.on-ink h1, .on-ink h2, .on-ink h3 { color: var(--paper); }
+
+.grid { display: grid; gap: clamp(1.2rem, 2.5vw, 2rem); }
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); }
+.grid--4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+
+.section-head {
+  max-width: 60ch;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+.section-head--split {
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.section-head--split > div { max-width: 52ch; }
+
+/* ---------- 5. Ink motifs ------------------------------------------------ */
+/* Halftone: the dot screen that turns a photograph into something a press
+   can print. Two offset dot grids, so it reads as a screen and not as
+   polka dots. Purely decorative, so it never carries meaning. */
+.halftone {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .5;
+  background-image:
+    radial-gradient(circle at center, currentColor 1.1px, transparent 1.2px),
+    radial-gradient(circle at center, currentColor .7px, transparent .8px);
+  background-size: 13px 13px, 13px 13px;
+  background-position: 0 0, 6.5px 6.5px;
+  color: rgba(22, 18, 15, .16);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+}
+.on-ink .halftone { color: rgba(247, 243, 234, .14); }
+
+/* A fade of the dot screen used as an edge, top or bottom of a band. */
+.halftone--edge {
+  inset: auto 0 0 0;
+  height: 120px;
+  -webkit-mask-image: linear-gradient(0deg, #000, transparent);
+  mask-image: linear-gradient(0deg, #000, transparent);
+}
+
+/* Registration crosshair — the target printed outside the artwork so each
+   screen can be lined up against the last. */
+.regmark {
+  position: absolute;
+  width: 34px; height: 34px;
+  opacity: .5;
+  pointer-events: none;
+  color: var(--red);
+}
+.regmark::before,
+.regmark::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.regmark::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+.regmark::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+.regmark span {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+/* Ink grain, laid over photographs so they sit on the same paper as the
+   rest of the page rather than floating above it. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .3;
+  mix-blend-mode: multiply;
+  background-image:
+    repeating-linear-gradient(97deg,  rgba(22, 18, 15, .05) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(173deg, rgba(22, 18, 15, .04) 0 1px, transparent 1px 3px);
+}
+
+/* The colour-separation strip: the ink swatches from a job sheet. */
+.inkstrip {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+}
+.inkstrip i { flex: 1; }
+.inkstrip i:nth-child(1) { background: var(--ink); }
+.inkstrip i:nth-child(2) { background: var(--red); }
+.inkstrip i:nth-child(3) { background: var(--blue); }
+.inkstrip i:nth-child(4) { background: var(--paper-3); }
+
+/* ---------- 6. Buttons --------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 50px;
+  padding: .8rem 1.6rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--body);
+  font-size: var(--step--1);
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease),
+              color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.btn:active { transform: translateY(0); }
+
+.btn--red { background: var(--red); border-color: var(--red); color: var(--white); }
+.btn--red:hover { background: var(--red-deep); border-color: var(--red-deep); }
+
+.btn--ghost { background: transparent; color: var(--ink); }
+.btn--ghost:hover { background: var(--ink); color: var(--paper); }
+.on-ink .btn--ghost { color: var(--paper); border-color: var(--paper); }
+.on-ink .btn--ghost:hover { background: var(--paper); color: var(--ink); }
+
+/* Same idea as .btn--ghost — transparent, so the photograph behind it is
+   never blocked — but in the brand red rather than the ink/paper pairing,
+   and with a heavier border so it still reads as the primary action next to
+   a plain outline button like "Ask on WhatsApp". The text carries a soft
+   dark halo rather than a solid backing, so it stays legible over whichever
+   part of a busy photograph happens to sit behind it without adding a fill
+   the request was explicit about not wanting. */
+.btn--outline-red {
+  background: transparent;
+  border-width: 3px;
+  border-color: var(--red);
+  color: var(--red);
+  text-shadow: 0 1px 3px rgba(12, 10, 8, .55), 0 0 16px rgba(12, 10, 8, .4);
+}
+.btn--outline-red:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--white);
+  text-shadow: none;
+}
+
+.btn--sm { min-height: 40px; padding: .5rem 1.1rem; font-size: .76rem; }
+.btn--block { width: 100%; }
+
+/* The add-to-quote control on a work card. Reads as a stamp, not a button. */
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 40px;
+  padding: .45rem 1rem;
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--r-pill);
+  background: rgba(255, 253, 249, .9);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  transition: all var(--dur) var(--ease);
+}
+.btn-add:hover { border-color: var(--red); border-style: solid; color: var(--red); }
+.btn-add[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- 7. Header ---------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(247, 243, 234, .88);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line);
+  transition: box-shadow var(--dur) var(--ease);
+}
+.site-header.is-stuck { box-shadow: 0 6px 24px -16px rgba(22, 18, 15, .8); }
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: var(--header-h);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  text-decoration: none;
+  margin-right: auto;
+}
+.brand-mark { width: 46px; height: 46px; object-fit: contain; flex: none; }
+
+/* Sized up specifically for the header — the owner's ask, "the logo and
+   name aren't visible enough." Scoped to .site-header rather than changing
+   the shared .brand-mark/.brand-name/.brand-sub classes outright, so the
+   footer's brand block (sized separately, with its own light backing disc)
+   is untouched. --header-h stays 74px either way: 56px leaves 18px of
+   breathing room top and bottom, comfortably inside the header's existing
+   height rather than growing it. */
+.site-header .brand-mark { width: 56px; height: 56px; }
+.site-header .brand-name { font-size: 1.42rem; }
+.site-header .brand-sub { font-size: .7rem; }
+
+/* The logo is black line art (plus a little red) on a transparent PNG —
+   reads fine on the header's cream background, but on the footer's dark ink
+   it nearly vanishes: only the red flame and "SCREEN & TEXTILE" survive,
+   the ring text and monogram outline disappear into the same dark colour.
+   Neither the flat black logo nor the "mono" variant is a light-coloured
+   version, so rather than generate a new asset, the footer gets a small
+   warm-paper disc behind just the mark — cheap, contained, and it keeps
+   working even if the logo file itself changes later. */
+.site-footer .brand-mark {
+  background: var(--paper);
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .3);
+}
+.brand-text { display: grid; line-height: 1.05; }
+.brand-name {
+  font-family: var(--display);
+  font-size: 1.16rem;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.brand-sub {
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.site-nav ul {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  margin: 0; padding: 0;
+  list-style: none;
+}
+.site-nav a {
+  display: block;
+  padding: .5rem .8rem;
+  border-radius: var(--r-pill);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.site-nav a:hover { background: var(--paper-3); }
+.site-nav a[aria-current="page"] { background: var(--ink); color: var(--paper); }
+.site-nav .nav-cta {
+  background: var(--red);
+  color: var(--white);
+  margin-left: .4rem;
+}
+.site-nav .nav-cta:hover { background: var(--red-deep); }
+
+.nav-toggle {
+  display: none;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  padding: .5rem .9rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: transparent;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.nav-toggle-bars, .nav-toggle-bars::before, .nav-toggle-bars::after {
+  display: block;
+  width: 17px; height: 2px;
+  background: currentColor;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.nav-toggle-bars { position: relative; }
+.nav-toggle-bars::before, .nav-toggle-bars::after { content: ""; position: absolute; left: 0; }
+.nav-toggle-bars::before { top: -6px; }
+.nav-toggle-bars::after  { top: 6px; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars { background: transparent; }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars::before { transform: translateY(6px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] .nav-toggle-bars::after  { transform: translateY(-6px) rotate(-45deg); }
+
+@media (max-width: 1020px) {
+  .nav-toggle { display: inline-flex; }
+  .site-nav {
+    position: fixed;
+    inset: var(--header-h) 0 auto 0;
+    max-height: calc(100dvh - var(--header-h));
+    overflow: auto;
+    padding: 1rem 1.25rem 2rem;
+    background: var(--paper);
+    border-bottom: 2px solid var(--ink);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-12px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--dur) var(--ease);
+  }
+  .site-nav.is-open { transform: none; opacity: 1; visibility: visible; }
+  .site-nav ul { flex-direction: column; align-items: stretch; gap: .15rem; }
+  .site-nav a { padding: .85rem 1rem; font-size: .95rem; border-radius: var(--r); }
+  .site-nav .nav-cta { margin: .5rem 0 0; text-align: center; }
+}
+
+/* ---------- 8. Hero ------------------------------------------------------ */
+.hero {
+  position: relative;
+  min-height: min(90vh, 780px);
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--paper);
+  isolation: isolate;
+}
+
+/* Measured, not guessed: header 75px + hero 90vh already consumed the
+   whole viewport on a common laptop screen before the ticker even added
+   its own 60px, which is why the ticker was landing below the fold. This
+   ties the hero's height to the two things sharing the screen with it, so
+   header + hero + ticker always fit together by construction rather than
+   by a vh number that happens to work on one screen size. Desktop only —
+   the mobile hero (≤760px) is a deliberately different, shorter layout
+   already tuned separately; leave it alone. */
+@media (min-width: 761px) {
+  /* The extra 1px accounts for .site-header's bottom border, which isn't
+     part of --header-h itself. */
+  .hero { min-height: calc(100vh - var(--header-h) - 1px - var(--ticker-h)); }
+}
+
+.hero-slides { position: absolute; inset: 0; z-index: 0; }
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.1s var(--ease);
+}
+.hero-slide.is-active { opacity: 1; }
+.hero-slide img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+}
+/* A punch-in per slide rather than one continuous drift. The old version ran
+   on its own 22s clock regardless of how long a slide was actually on
+   screen — against a ~3s hold that meant each slide showed a random, barely
+   perceptible sliver of a very slow zoom. Tying the animation to
+   `.is-active` instead means it restarts from scratch every time a slide
+   becomes current: removing the class stops it (the rule stops matching),
+   adding it back plays it from the beginning. The duration runs a little
+   past the hold time on purpose, so the zoom is still visibly moving when
+   the crossfade to the next slide begins rather than sitting still first.
+   If HOLD in site.js changes materially, this should move with it. */
+.hero-slide.is-active img {
+  animation: heroZoom 5s linear forwards;
+}
+@keyframes heroZoom {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.15); }
+}
+
+/* The ink wash that keeps the headline readable over any photograph.
+   Brought down again here (a second pass — the mobile version had already
+   been lightened once) because the same "nearly opaque over most of the
+   frame" problem was true on desktop, just less obviously since the photo
+   has more room to show through around the copy. This keeps the same shape
+   — heaviest where the text sits, clear over the product — at roughly two
+   thirds the previous strength. */
+.hero-slides::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(12, 10, 8, .64) 0%, rgba(12, 10, 8, .48) 42%,
+                            rgba(12, 10, 8, .14) 70%, rgba(12, 10, 8, .32) 100%),
+    linear-gradient(0deg, rgba(12, 10, 8, .48), transparent 45%);
+}
+
+.hero-body {
+  position: relative;
+  z-index: 2;
+  padding: clamp(4rem, 10vw, 7rem) 0 clamp(4.5rem, 9vw, 6.5rem);
+  max-width: 40ch;
+  /* Some slides have the product sitting on the left with the open ground on
+     the right — the caps and the uniform slides both do. For those, script
+     shifts this whole block across to sit over the empty side instead of on
+     top of the product. The shift is a measured pixel transform (set from
+     JS, where the box's real width is known) rather than a CSS-only swap
+     like justify-content, because that kind of swap cannot be transitioned
+     — it would jump instead of sliding. */
+  transform: translateX(0);
+  transition: transform .7s var(--ease);
+  will-change: transform;
+}
+/* The .hero min-height above is only a floor — .hero-body's own padding
+   was the real height driver (216px of vertical padding alone on a
+   1440px screen), so the hero never actually got to shrink to fit header
+   + ticker until this came down too. Must stay below the base rule above:
+   equal specificity, so whichever is later in the file wins regardless
+   of the media query. */
+@media (min-width: 761px) {
+  .hero-body { padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2.2rem, 5vw, 3.5rem); }
+}
+
+/* The wash exists to keep the copy readable over a photograph, so it has to
+   move with the copy: heavy over whichever side the text currently sits on,
+   fading away from it. The default (in section 8 above) is built for the
+   left; this mirrors it for the slides where the block has shifted right. */
+.hero.is-text-right .hero-slides::after {
+  background:
+    linear-gradient(260deg, rgba(12, 10, 8, .64) 0%, rgba(12, 10, 8, .48) 42%,
+                            rgba(12, 10, 8, .14) 70%, rgba(12, 10, 8, .32) 100%),
+    linear-gradient(0deg, rgba(12, 10, 8, .48), transparent 45%);
+}
+.hero h1 {
+  font-size: var(--step-4);
+  margin-bottom: .35em;
+}
+/* The second line is set in red, so it inherited a red ghost from .misreg —
+   red on red, which read as a blur rather than as a second screen. It takes
+   a lighter tint of the same ink instead, the way a screen lays down thinner
+   on its second pass, so the offset is legible as a separate impression.
+   The blue stays as the third, faintest screen. */
+.hero h1 em {
+  display: block;
+  font-style: normal;
+  color: var(--red);
+  -webkit-text-stroke: 0;
+  text-shadow:
+    .045em .045em 0 var(--red-lit),
+   -.012em -.012em 0 rgba(27, 47, 181, .5);
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-top: 2rem;
+}
+
+/* On a phone there is no "left half" for the copy to sit in — the headline
+   lands straight on top of the garment. So below 760px the wash stops being
+   an angled sweep and becomes a heavy vertical one: dark where the words
+   are, clearing towards the bottom so the product is still visible. */
+@media (max-width: 760px) {
+  /* Third approach for mobile, not a tweak of the second. The wash, then a
+     lighter wash, then a frosted card behind the text — every version still
+     put words on top of a photograph and asked for contrast insurance to
+     make that survive. The owner's call after seeing it live: stop asking
+     the photo to double as a text background at all. So the photo and the
+     copy split into two honest, stacked zones — a clean image on top with
+     nothing over it, and a solid panel below carrying the words. The image
+     is finally shown exactly as photographed; the text sits on the page's
+     ordinary dark section colour, the same flat ink used everywhere else on
+     the site behind light text, so it needs no per-photo tuning ever again. */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Not aspect-ratio: every .hero-slide inside this is position:absolute
+     (needed for the crossfade), which means they contribute zero content
+     height to .hero-slides — so inside a column flex container with no
+     other sizing hint, aspect-ratio had nothing to size itself from and the
+     box collapsed to zero height. An explicit height sidesteps that; width
+     is set explicitly too rather than assumed from flex stretch. */
+  .hero-slides {
+    position: relative;
+    order: 1;
+    inset: auto;
+    width: 100%;
+    height: min(100vw, 480px);
+  }
+  /* No tint at all on mobile now, in either form — not the wash, not the
+     lighter wash, not the frosted card, not the footing gradient this
+     replaces. Every version of "darken part of the photo" still read as a
+     visible effect sitting on top of the picture once it was checked on a
+     real device, seam-strength tuning included. The owner's call: none of
+     it, full stop. The photo shows exactly as photographed, unmodified, on
+     every slide. `.hero.is-text-right` needs the same override repeated
+     here for the same specificity reason noted elsewhere in this file (it
+     is not scoped to desktop, so a lower-specificity reset would not have
+     beaten it) — if a tint is ever reintroduced here, it has to go in both
+     places again or this class of leak comes back. */
+  .hero-slides::after,
+  .hero.is-text-right .hero-slides::after {
+    background: none;
+  }
+
+  /* order on .hero-body itself does nothing for flex ordering — the actual
+     direct flex child of .hero is .wrap (which wraps .hero-body), so the
+     order belongs there. Scoped with the child combinator so this doesn't
+     touch any other .wrap on the page. */
+  .hero > .wrap { order: 2; }
+  .hero-body {
+    position: static;
+    transform: none !important;
+    max-width: none;
+    padding: 1.6rem 1.3rem 1.1rem;
+  }
+
+  /* Centred, upright, filling its share of the crop — there is no copy
+     sharing the frame with it any more, so it can show the piece plainly.
+     30% suits most of the six photos, but the caps/headwear slide has a
+     much taller dark studio backdrop above its product than the others, so
+     30% left roughly half the square crop empty and dark. A per-slide
+     override (set as a custom property on that one .hero-slide in the HTML)
+     beats retuning the shared default and risking the slides that already
+     look right. */
+  .hero-slide img { object-position: center var(--mob-crop-y, 30%); }
+
+  .hero-actions { margin-top: 1.25rem; }
+  .hero-actions .btn { flex: 1 1 auto; }
+
+  /* Back in the flow under the buttons instead of pinned over the image —
+     there is no dock corner to clear here and no photo to sit on, so the
+     positioning rules that existed for those no longer apply. */
+  .hero-foot {
+    order: 3;
+    position: static;
+    width: auto;
+    margin: 1.1rem 1.3rem 1.4rem;
+    padding-right: 0;
+    justify-content: center;
+  }
+  .hero-caption { display: none; }
+
+  /* Sized for a compact panel now, not for sitting over a busy photograph —
+     the misregistration shadow shrinks with the headline so it stays a
+     crisp detail rather than a smear at this size. */
+  .hero h1 { font-size: clamp(1.9rem, 1.3rem + 6vw, 2.5rem); }
+  .hero .kicker { font-size: .72rem; }
+  .hero .lede,
+  .hero-points li { font-size: .9rem; }
+}
+
+/* The hero copy sits straight on the ink wash, so it takes the light
+   colours the wash needs rather than the page's usual dark ones. */
+.hero .kicker { color: #ff6b6b; }
+.hero .lede { color: rgba(247, 243, 234, .82); }
+
+/* The hero is always dark — a photo under a wash, or now the flat ink panel
+   on mobile — never the page's usual light background. .btn--ghost's plain
+   ink-on-transparent styling only flips to light when an .on-ink ancestor is
+   present, and the hero stopped carrying that class (fixing an unrelated
+   "black box" look) without this being added at the same time — so the
+   button was rendering dark text on a dark background, essentially invisible.
+   Scoped to .hero directly rather than restoring .on-ink, since the hero
+   still isn't a plain ink section (it starts life as a photograph). */
+.hero .btn--ghost { color: var(--paper); border-color: var(--paper); }
+.hero .btn--ghost:hover { background: var(--paper); color: var(--ink); }
+
+/* The hero's four points. They arrive one after another from the left, the
+   way sheets come off a press — but the whole run is done inside half a
+   second, because a visitor should be reading the pitch, not waiting for it.
+   Pure CSS, so it runs on load without waiting for the script. */
+.hero-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .55rem;
+  max-width: 40ch;
+}
+.hero-points li {
+  display: grid;
+  grid-template-columns: 1.15rem 1fr;
+  gap: .75rem;
+  align-items: start;
+  font-size: var(--step-0);
+  line-height: 1.4;
+  color: rgba(247, 243, 234, .88);
+  /* Each line starts left of where it lands and slightly transparent. */
+  animation: pointIn .5s var(--ease) backwards;
+}
+.hero-points li::before {
+  content: "";
+  width: 9px; height: 9px;
+  margin-top: .5em;
+  background: var(--red);
+  transform: rotate(45deg);
+}
+.hero-points li:nth-child(1) { animation-delay: .10s; }
+.hero-points li:nth-child(2) { animation-delay: .22s; }
+.hero-points li:nth-child(3) { animation-delay: .34s; }
+.hero-points li:nth-child(4) { animation-delay: .46s; }
+
+@keyframes pointIn {
+  from { opacity: 0; transform: translateX(-26px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The dots and the slide caption travel together on one row at the foot of
+   the hero. They used to be positioned independently, which put the caption
+   underneath the call-to-action buttons on a short window and underneath the
+   WhatsApp button on a wide one. As a row they can only ever collide with
+   each other, and they are sized so they do not. */
+.hero-foot {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: clamp(1rem, 2.5vw, 2rem);
+  z-index: 3;
+  width: min(100% - 2.5rem, var(--wrap));
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* Clear of the floating dock in the corner. */
+  padding-right: clamp(0px, 22vw, 250px);
+}
+
+.hero-caption {
+  margin: 0;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(247, 243, 234, .6);
+}
+
+.hero-dots {
+  flex: none;
+  display: flex;
+  gap: .5rem;
+}
+.hero-dots button {
+  width: 30px; height: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: rgba(247, 243, 234, .3);
+  transition: background var(--dur) var(--ease), width var(--dur) var(--ease);
+}
+.hero-dots button[aria-current="true"] { background: var(--red); width: 46px; }
+.hero-dots button:hover { background: rgba(247, 243, 234, .6); }
+
+/* On a phone the caption is the first thing to go — the dots still say
+   where you are, and the photograph speaks for itself. */
+@media (max-width: 620px) {
+  .hero-caption { display: none; }
+  .hero-foot { padding-right: 0; }
+}
+
+/* The marquee under the hero — the services, running past like a print run. */
+.ticker {
+  position: relative;
+  overflow: hidden;
+  padding: .9rem 0;
+  background: var(--red);
+  color: var(--white);
+  border-block: 2px solid var(--ink);
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 2.5rem;
+  animation: tickerRun 38s linear infinite;
+}
+.ticker span {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+.ticker span::after {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink);
+  flex: none;
+}
+@keyframes tickerRun {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+
+/* ---------- 8b. Promo banner (light) --------------------------------------- */
+/* A second kind of hero, deliberately the opposite of the one above: the
+   source photograph itself was composed with a bright, uncluttered area
+   built in for the copy, so the copy sits straight on it — dark ink text,
+   red accents, no dark wash. Piling the usual .hero-slides::after treatment
+   on top of a photo built for this would have fought the photography rather
+   than used it. A named exception rather than a mode of .hero, since it
+   shares none of the slideshow, wash or measured-shift machinery. */
+.promo {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--paper-2);
+  box-shadow: var(--shadow-lg);
+  isolation: isolate;
+}
+
+.promo-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.promo-media picture,
+.promo-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The desktop photo keeps its copy space on the left and its bags on the
+     right, so the crop favours the right — the side that is allowed to be
+     lost first on a narrower desktop window is empty background, not bag. */
+  object-position: right center;
+}
+
+.promo-body {
+  position: relative;
+  z-index: 1;
+  max-width: 30rem;
+  padding: clamp(2.4rem, 6vw, 4.5rem) clamp(1.5rem, 5vw, 3.5rem);
+}
+.promo-body .kicker { color: var(--red); }
+.promo-body h2 {
+  color: var(--ink);
+  font-size: clamp(1.9rem, 1.4rem + 3vw, 3.1rem);
+}
+.promo-body .lede {
+  color: var(--ink-soft);
+  /* Dark text on a photograph (rather than a flat card) still needs a
+     little insurance against the odd lighter patch in the weave behind it
+     — a very soft light halo, not a box, so "no heavy overlay" is kept to
+     the letter as well as the spirit. */
+  text-shadow: 0 1px 0 rgba(255, 253, 249, .5);
+}
+
+@media (min-width: 761px) {
+  .promo { min-height: clamp(360px, 46vw, 560px); display: flex; align-items: center; }
+}
+
+@media (max-width: 760px) {
+  /* The mobile photo flips the layout the source was built for: bright
+     top, product anchored at the bottom, so the copy moves to match. */
+  .promo { display: block; }
+  .promo-media img { object-position: center bottom; }
+  .promo-body {
+    max-width: none;
+    padding: clamp(2rem, 8vw, 2.75rem) clamp(1.25rem, 5vw, 1.75rem)
+             clamp(13rem, 62vw, 17rem);
+  }
+  .promo-body h2 { font-size: clamp(1.7rem, 1.2rem + 5vw, 2.3rem); }
+}
+
+/* ---------- 9. Cards ----------------------------------------------------- */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--paper-2);
+}
+.card-media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .6s var(--ease);
+}
+.card:hover .card-media img { transform: scale(1.05); }
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: 1.25rem 1.35rem 1.4rem;
+  flex: 1;
+}
+/* Cards are always white, no matter what section wraps them (e.g. the
+   jute-bag process cards sit inside .on-ink, whose dark-section heading
+   rule would otherwise push white text onto this white card). */
+.card-body h3 { margin: 0; color: var(--ink); }
+.card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  margin-top: auto;
+  padding-top: .9rem;
+}
+
+/* The provenance badge. A photograph of delivered work and a demonstration
+   of what an order looks like are two different claims, and the site says
+   which is which on every single card rather than hoping nobody asks. */
+.badge {
+  position: absolute;
+  top: .8rem; left: .8rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .7rem;
+  border-radius: var(--r-pill);
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.badge--real { background: rgba(22, 18, 15, .82); color: var(--paper); }
+.badge--mock { background: rgba(247, 243, 234, .9); color: var(--ink); border: 1px solid var(--line-strong); }
+/* The numbered step badge on the jute-bag process cards. Same shape as the
+   provenance badges above, red rather than ink/paper, since it is marking a
+   position in a sequence rather than making a real-vs-sample claim. */
+.badge--step { background: var(--red); color: var(--white); }
+
+/* Top-right instead of the default top-left, for a badge that would
+   otherwise land on top of body copy that also starts near the top-left —
+   the jute promo banner's text column, specifically. */
+.badge--tr { left: auto; right: .8rem; }
+
+/* Service cards — numbered like plates in a job sheet. */
+.service {
+  position: relative;
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.service:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.service::before {
+  content: attr(data-n);
+  position: absolute;
+  top: -.35em; right: .1em;
+  font-family: var(--display);
+  font-size: 6rem;
+  line-height: 1;
+  color: var(--paper-2);
+  pointer-events: none;
+}
+.service > * { position: relative; }
+.service h3 { margin-bottom: .5rem; }
+.service ul {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .5rem;
+}
+.service li {
+  display: flex;
+  gap: .6rem;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+.service li::before {
+  content: "";
+  flex: none;
+  width: 7px; height: 7px;
+  margin-top: .55em;
+  background: var(--red);
+  transform: rotate(45deg);
+}
+
+/* The promise blocks on the ink band. */
+.promise {
+  padding: 1.5rem 0 0;
+  border-top: 2px solid rgba(247, 243, 234, .22);
+}
+.promise h3 { margin-bottom: .5rem; }
+.promise p { color: rgba(247, 243, 234, .72); font-size: var(--step--1); margin: 0; }
+
+/* Filter pills on the work gallery. */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-bottom: 2rem;
+}
+.filter {
+  min-height: 42px;
+  padding: .45rem 1.1rem;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: transparent;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  transition: all var(--dur) var(--ease);
+}
+.filter:hover { border-color: var(--ink); }
+.filter[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+/* ---------- 10. Sections ------------------------------------------------- */
+/* The split feature block: a photograph one side, the argument the other. */
+.split {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+}
+.split--flip .split-media { order: 2; }
+@media (max-width: 800px) { .split--flip .split-media { order: 0; } }
+
+.split-media {
+  position: relative;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.split-media img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* The contact / address block. */
+.info-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.1rem; }
+.info-list dt {
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: .2rem;
+}
+.info-list dd { margin: 0; font-size: var(--step-0); }
+.info-list a { text-decoration-color: var(--red); text-underline-offset: 3px; }
+
+/* An honest note — used wherever the site does not know something yet. */
+.note {
+  display: flex;
+  gap: .7rem;
+  padding: .9rem 1.1rem;
+  border-left: 3px solid var(--red);
+  background: var(--paper-2);
+  border-radius: 0 var(--r) var(--r) 0;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+
+/* ---------- 10b. Inner page furniture ------------------------------------ */
+/* The band at the top of every page that is not the home page. Shorter than
+   the hero, same ink, so the site reads as one press run. */
+.page-hero {
+  position: relative;
+  padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(2.5rem, 5vw, 4rem);
+  overflow: hidden;
+}
+.page-hero h1 { max-width: 18ch; }
+.page-hero .lede { margin-top: 1rem; }
+
+.breadcrumb {
+  margin: 0 0 1.5rem;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(247, 243, 234, .55);
+}
+.breadcrumb a { color: inherit; text-decoration: none; }
+.breadcrumb a:hover { color: var(--paper); text-decoration: underline; }
+
+/* The run-through-the-job list. Numbered off the counter so the numbers
+   cannot drift out of step with the steps. */
+.steps {
+  counter-reset: step;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: rgba(247, 243, 234, .18);
+  border-block: 1px solid rgba(247, 243, 234, .18);
+}
+.steps li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: start;
+  padding: clamp(1.4rem, 3vw, 2.2rem) 0;
+  background: var(--ink);
+}
+.steps li::before {
+  content: counter(step, decimal-leading-zero);
+  grid-column: 1;
+  grid-row: 1 / -1;
+  font-family: var(--display);
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--red);
+}
+/* Three grid items share two columns — the counter, the heading and the
+   paragraph — so auto-placement wrapped the paragraph back under the number
+   and squeezed it to the width of a two-digit numeral. Both text elements
+   are pinned to the second column instead, and the counter spans the rows
+   they occupy. */
+.steps h3 { grid-column: 2; margin-bottom: .4rem; }
+.steps p {
+  grid-column: 2;
+  margin: 0;
+  color: rgba(247, 243, 234, .72);
+  font-size: var(--step--1);
+  max-width: 62ch;
+}
+@media (max-width: 620px) {
+  .steps li { grid-template-columns: 1fr; gap: .5rem; }
+  .steps li::before { grid-column: 1; grid-row: auto; font-size: 1.8rem; }
+  .steps h3, .steps p { grid-column: 1; }
+}
+
+/* ---------- Jute process: a production line, not a card grid ------------- */
+/* The jute-bag process used to be four plain .card tiles in a grid — the
+   same treatment as the Our Work gallery, which read as "four products to
+   browse" rather than "one bag, four things that happen to it in order."
+   This is a straight line instead: a stage's number, a stitched thread to
+   the next stage, an alternating up/down offset so it doesn't fall back
+   into a tidy grid, and the site's own red+blue "misregistration" offset
+   (see .misreg) on the numerals instead of a small corner badge — the
+   numeral carries the accent now, not a pill sitting on the photo. */
+.process {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 2.5rem;
+}
+.process-step {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.process-step--down { margin-top: clamp(1.5rem, 4vw, 2.75rem); }
+
+/* Medallion size lives in one place so .process-link below can align to
+   exactly half of it — round rather than a tilted oval on purpose: an oval
+   rotated 45° needs the photo inside counter-rotated and scaled up to
+   avoid gaps at the corners, which is real geometry to get right with
+   nothing but computed-style checks to verify it by this session; a circle
+   needs none of that, crops less of the product than a tilt would, and
+   reads just as much like a "stop on a path" (a stepping stone, a medallion)
+   as an oval does. */
+.process-num {
+  display: block;
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 1.6rem + 2.4vw, 3.2rem);
+  line-height: 1;
+  color: var(--paper);
+  text-shadow:
+    .05em .05em 0 var(--red),
+   -.015em -.015em 0 rgba(27, 47, 181, .55);
+  margin-bottom: .5rem;
+}
+
+.process-media {
+  position: relative;
+  width: clamp(140px, 18vw, 190px);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 3px solid var(--red);
+  background: var(--paper-2);
+  margin: 0 auto 1.1rem;
+}
+.process-media img { width: 100%; height: 100%; object-fit: cover; }
+
+.process-step h3 { margin-bottom: .4rem; }
+/* Not .muted here on purpose — .muted's default (--ink-soft) is a dark
+   tone meant for a white card, and this now sits straight on the dark
+   .on-ink background instead, the same fix as .steps p below it needed. */
+.process-step p {
+  margin: 0 auto;
+  max-width: 30ch;
+  color: rgba(247, 243, 234, .72);
+  font-size: var(--step--1);
+}
+
+/* The rubber-stamp "Delivered" mark on the last stage — the story's payoff,
+   and a nod to this shop's own rubber-stamp service rather than a generic
+   done tick. Sits astride the medallion's own edge, like a wax seal. */
+.process-stamp {
+  position: absolute;
+  right: -6px; bottom: 10px;
+  padding: .35rem .8rem;
+  border: 2px solid var(--red);
+  border-radius: 3px;
+  color: var(--red);
+  background: rgba(247, 243, 234, .92);
+  font-family: var(--display);
+  font-size: .8rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+  z-index: 2;
+}
+
+/* The connecting arrow — a real SVG now, hollow/outlined (stroke, no fill)
+   rather than a filled CSS triangle: this shop's own registration-mark
+   motif (.regmark, elsewhere on the page) is already thin outlined
+   line-art, so an outlined arrow reads as "this brand" more than a solid
+   block wedge does. The <path> draws a shaft plus an open chevron head in
+   one continuous stroke.
+   Two bugs the previous (div + border-triangle) version had, both still
+   fixed here:
+   1. align-self:center used to center it on the FLEX LINE's own cross-axis
+      center — but the alternating up/down offset on .process-step makes
+      that center drift depending on which neighbours are tallest. It's
+      pinned with an explicit margin-top instead: every term below is one
+      of the real box heights stacked above the medallion in an "up" step
+      (the numeral's font-size — line-height:1, so its box height tracks
+      font-size directly — its margin-bottom, half the medallion's
+      diameter, half the up/down offset to split towards a "down" step's
+      lower medallion too), then half the arrow's OWN rendered height is
+      subtracted so its centre — not its top edge — lands there.
+   2. It had no z-index, so wherever it happened to overlap a photo, the
+      photo — later in DOM order — painted over it and hid the arrowhead.
+      z-index here guarantees it always renders in front. */
+.process-link {
+  /* Bigger on purpose, beyond just "looks bolder": .process-step is
+     flex:1 1 0 (equal-share growth — its width comes from dividing up
+     whatever's left, not from its own content), so a wider link directly
+     shrinks the leftover space each step gets, which shrinks the empty
+     padding sitting between the circle and the arrow. This is the actual
+     fix for "are they connected" — not just a bigger arrow floating in the
+     same-size gap, a smaller gap for it to fill. */
+  /* width+height set explicitly rather than via aspect-ratio: aspect-ratio
+     combined with flex-basis on a replaced element (this SVG) computed to
+     a real CSS width in getComputedStyle but rendered at 0 actual pixels —
+     a genuine browser inconsistency between computed style and layout for
+     that specific combination, confirmed by measuring the live box, not
+     assumed. Two independent, unambiguous values sidestep it entirely. */
+  flex: 0 0 clamp(5.5rem, 12vw, 9rem);
+  width: clamp(5.5rem, 12vw, 9rem);
+  height: calc(clamp(5.5rem, 12vw, 9rem) * 28 / 64);
+  align-self: flex-start;
+  margin-top: calc(
+    clamp(2.2rem, 1.6rem + 2.4vw, 3.2rem) + .5rem +
+    clamp(140px, 18vw, 190px) / 2 +
+    clamp(1.5rem, 4vw, 2.75rem) / 2 -
+    (clamp(5.5rem, 12vw, 9rem) * 28 / 64 / 2)
+  );
+  position: relative;
+  z-index: 3;
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.process-link[data-reveal] { opacity: 1; transform: scaleX(0); transform-origin: left center; }
+.process-link[data-reveal].is-in { transform: scaleX(1); }
+
+@media (max-width: 900px) {
+  .process { flex-direction: column; align-items: center; }
+  .process-step--down { margin-top: 0; margin-left: clamp(1.25rem, 6vw, 2.5rem); }
+  /* Rotated 90° to point down rather than redrawn — CSS transform doesn't
+     change the box a rotated element reserves in the surrounding layout
+     (only how it paints), so the margin below adds back the difference
+     between this box's declared height and its rotated visual height,
+     otherwise the arrow would visually overlap the medallion after it. */
+  .process-link {
+    flex: 0 0 auto;
+    width: 80px;
+    height: 35px;
+    margin: 23px auto;
+    align-self: center;
+  }
+  .process-link[data-reveal] { transform: rotate(90deg) scaleX(0); transform-origin: left center; }
+  .process-link[data-reveal].is-in { transform: rotate(90deg) scaleX(1); }
+}
+
+/* The "what to send" panel on the contact page. */
+.quote-card {
+  padding: clamp(1.5rem, 3.5vw, 2.4rem);
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+.quote-card h3 { margin-bottom: .4rem; }
+
+.checklist {
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .8rem;
+}
+/* The box is positioned rather than laid out as a grid or flex item. Both of
+   those blockify *every* element child, so the <strong> at the start of each
+   line became its own item and the sentence after it became another — which
+   pushed the description into the 22px marker column. Out of flow, the whole
+   line stays ordinary inline text and wraps the way prose should. */
+.checklist li {
+  position: relative;
+  padding-left: 2.1rem;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+}
+.checklist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .35em;
+  width: 15px; height: 15px;
+  border: 2px solid var(--red);
+  border-radius: 3px;
+}
+.checklist strong { color: var(--ink); }
+
+/* ---------- 11. Footer --------------------------------------------------- */
+.site-footer {
+  position: relative;
+  background: var(--ink);
+  color: var(--paper);
+  padding: clamp(3rem, 6vw, 5rem) 0 2rem;
+  overflow: hidden;
+}
+.footer-grid {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+}
+.footer-grid .brand-name, .footer-grid .brand-sub { color: var(--paper); }
+.footer-grid .brand-sub { color: rgba(247, 243, 234, .55); }
+.footer-blurb { color: rgba(247, 243, 234, .7); font-size: var(--step--1); max-width: 40ch; }
+
+.footer-nav h4 { color: rgba(247, 243, 234, .5); margin-bottom: 1rem; }
+.footer-nav ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .55rem; }
+.footer-nav a {
+  color: rgba(247, 243, 234, .8);
+  text-decoration: none;
+  font-size: var(--step--1);
+  transition: color var(--dur) var(--ease);
+}
+.footer-nav a:hover { color: var(--red); }
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(247, 243, 234, .18);
+  font-size: .78rem;
+  color: rgba(247, 243, 234, .55);
+}
+.footer-bottom p { margin: 0; }
+
+/* ---------- 12. Quote dock ----------------------------------------------- */
+/* Bottom right, stacked: WhatsApp above, the quote list below it. Both stay
+   clear of the safe area on a phone. */
+.dock {
+  position: fixed;
+  right: clamp(.9rem, 2.5vw, 1.6rem);
+  bottom: clamp(.9rem, 2.5vw, 1.6rem);
+  bottom: max(clamp(.9rem, 2.5vw, 1.6rem), env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .75rem;
+}
+
+/* WhatsApp — the familiar green circle, drawn rather than downloaded. */
+.wa-fab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 8px 24px -6px rgba(37, 211, 102, .6), var(--shadow);
+  text-decoration: none;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.wa-fab:hover { transform: scale(1.07); }
+.wa-fab svg { width: 32px; height: 32px; }
+/* A slow ring, so it is noticed once without nagging. */
+.wa-fab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #25d366;
+  animation: waPing 3.2s var(--ease) infinite;
+}
+@keyframes waPing {
+  0%       { transform: scale(1);   opacity: .7; }
+  70%,100% { transform: scale(1.6); opacity: 0; }
+}
+
+.wa-fab .fab-label,
+.quote-fab .fab-label {
+  position: absolute;
+  right: calc(100% + .7rem);
+  white-space: nowrap;
+  padding: .4rem .8rem;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateX(6px);
+  pointer-events: none;
+  transition: all var(--dur) var(--ease);
+}
+.wa-fab:hover .fab-label,
+.quote-fab:hover .fab-label { opacity: 1; transform: none; }
+
+/* The quote button itself. */
+.quote-fab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  height: 58px;
+  padding: 0 1.35rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--dur) var(--ease);
+}
+.quote-fab:hover { transform: translateY(-2px); }
+.quote-fab svg { width: 20px; height: 20px; }
+
+.quote-count {
+  display: grid;
+  place-items: center;
+  min-width: 24px; height: 24px;
+  padding: 0 .4rem;
+  border-radius: var(--r-pill);
+  background: var(--red);
+  color: var(--white);
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+}
+.quote-fab[data-empty="true"] .quote-count { display: none; }
+
+/* A nudge when something is added, so the dock is clearly where it went. */
+.quote-fab.is-bumped { animation: bump .5s var(--ease); }
+@keyframes bump {
+  0%, 100% { transform: none; }
+  30%      { transform: translateY(-6px) scale(1.05); }
+  60%      { transform: translateY(0) scale(.99); }
+}
+
+/* The panel that opens above the dock. */
+.quote-panel {
+  position: fixed;
+  right: clamp(.9rem, 2.5vw, 1.6rem);
+  bottom: calc(clamp(.9rem, 2.5vw, 1.6rem) + 140px);
+  z-index: 71;
+  width: min(calc(100vw - 1.8rem), 380px);
+  max-height: min(68vh, 560px);
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px) scale(.97);
+  transform-origin: bottom right;
+  transition: all var(--dur) var(--ease);
+}
+.quote-panel.is-open { opacity: 1; visibility: visible; transform: none; }
+
+.quote-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem .9rem;
+  border-bottom: 1px solid var(--line);
+}
+.quote-head h2 { margin: 0; font-size: 1.15rem; }
+.quote-close {
+  display: grid;
+  place-items: center;
+  width: 36px; height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper-2);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.quote-close:hover { background: var(--paper-3); }
+
+.quote-items {
+  margin: 0;
+  padding: .6rem;
+  list-style: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  flex: 1;
+}
+.quote-item {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  gap: .7rem;
+  align-items: center;
+  padding: .55rem;
+  border-radius: var(--r);
+}
+.quote-item + .quote-item { border-top: 1px solid var(--line); }
+.quote-item img {
+  width: 54px; height: 54px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+}
+.quote-item-name { font-size: .88rem; font-weight: 700; line-height: 1.3; }
+.quote-item-meta { font-size: .72rem; color: var(--ink-faint); }
+.quote-remove {
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.quote-remove:hover { background: rgba(216, 35, 42, .12); color: var(--red); }
+
+.quote-empty {
+  padding: 2.2rem 1.4rem;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: var(--step--1);
+}
+.quote-empty strong { display: block; color: var(--ink); margin-bottom: .35rem; }
+
+.quote-foot {
+  padding: .9rem 1.1rem 1.1rem;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 0 0 calc(var(--r-lg) - 2px) calc(var(--r-lg) - 2px);
+  display: grid;
+  gap: .7rem;
+}
+.quote-foot label {
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.quote-foot textarea,
+.quote-foot input {
+  width: 100%;
+  padding: .6rem .8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  background: var(--white);
+  font-size: .9rem;
+  resize: vertical;
+}
+.quote-send {
+  background: #25d366;
+  border-color: #25d366;
+  color: #06331a;
+}
+.quote-send:hover { background: #1eb856; border-color: #1eb856; }
+.quote-send svg { width: 19px; height: 19px; }
+
+@media (max-width: 560px) {
+  .quote-panel {
+    right: .9rem; left: .9rem;
+    width: auto;
+    bottom: calc(.9rem + 132px);
+  }
+  .quote-fab { padding: 0 1rem; }
+  .quote-fab .fab-text { display: none; }
+}
+
+/* ---------- 13. Lightbox ------------------------------------------------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: rgba(12, 10, 8, .93);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+}
+.lightbox.is-open { opacity: 1; visibility: visible; }
+.lightbox-figure {
+  margin: 0;
+  max-width: min(100%, 1100px);
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+.lightbox img {
+  max-width: 100%;
+  max-height: 74vh;
+  object-fit: contain;
+  border-radius: var(--r);
+  box-shadow: var(--shadow-lg);
+}
+.lightbox figcaption {
+  text-align: center;
+  color: rgba(247, 243, 234, .82);
+  font-size: var(--step--1);
+  max-width: 60ch;
+}
+.lightbox-close, .lightbox-nav {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 48px; height: 48px;
+  border: 2px solid rgba(247, 243, 234, .3);
+  border-radius: 50%;
+  background: rgba(22, 18, 15, .6);
+  color: var(--paper);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.lightbox-close { top: 1.2rem; right: 1.2rem; }
+.lightbox-nav--prev { left: 1.2rem; top: 50%; transform: translateY(-50%); }
+.lightbox-nav--next { right: 1.2rem; top: 50%; transform: translateY(-50%); }
+.lightbox-close:hover, .lightbox-nav:hover { background: var(--red); border-color: var(--red); }
+
+/* ---------- 14. Motion --------------------------------------------------- */
+/* Sections arrive as you reach them. Set from script, so a page with no
+   JavaScript shows everything rather than nothing. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .7s var(--ease), transform .7s var(--ease);
+}
+[data-reveal].is-in { opacity: 1; transform: none; }
+[data-reveal-delay="1"] { transition-delay: .08s; }
+[data-reveal-delay="2"] { transition-delay: .16s; }
+[data-reveal-delay="3"] { transition-delay: .24s; }
+[data-reveal-delay="4"] { transition-delay: .32s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  [data-reveal] { opacity: 1; transform: none; }
+  .hero-points li { animation: none; opacity: 1; transform: none; }
+  .hero-slide img { animation: none; }
+  .wa-fab::after { display: none; }
+}
+
+/* ---------- 15. Print ---------------------------------------------------- */
+@media print {
+  .site-header, .dock, .quote-panel, .lightbox, .ticker, .hero-dots { display: none !important; }
+  body { background: #fff; color: #000; }
+  .on-ink, .site-footer { background: #fff !important; color: #000 !important; }
+  .card, .service { break-inside: avoid; border: 1px solid #999; }
+}
