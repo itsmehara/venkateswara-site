@@ -26,7 +26,7 @@ through `file://`.
 |---|---|
 | `index.html` | Seven-slide responsive hero, services, featured work, jute promotion, promises, and calls to action |
 | `services.html` | Seven services, bulk-order process, print/embroidery comparison, couple tees, and jute-bag workflow |
-| `work.html` | Filterable nineteen-project gallery with provenance labels, full-size viewing, and enquiry actions |
+| `work.html` | Filterable eighteen-project gallery with provenance labels, full-size viewing, and enquiry actions |
 | `sketchbook.html` | Pearl Linen Design Book with one portfolio project per spread and responsive page-turn behavior |
 | `about.html` | Workshop, working approach, promises, and proprietor introduction |
 | `contact.html` | Contact details, quote checklist, WhatsApp actions, and map search |
@@ -36,7 +36,7 @@ through `file://`.
 ```text
 assets/css/style.css        Shared visual system and responsive components
 assets/css/sketchbook.css   Design Book layout, material, and turn presentation
-assets/js/data.js           Business details, 7 services, 19 projects, promises
+assets/js/data.js           Business details, 7 services, 18 projects, promises
 assets/js/site.js           Navigation, hero, gallery, lightbox, enquiry, bindings
 assets/js/sketchbook.js     Design Book rendering and page-turn interactions
 assets/img/                 37 web-ready brand, hero, product, and texture files
@@ -57,7 +57,7 @@ sitemap.xml                 Six-page sitemap; final domain still required
   transmitted until the visitor chooses to send it.
 - Honest **Delivered work** and **Sample** labels driven by each project's
   `provenance` field.
-- Nineteen-project Design Book with Pearl Linen pages, desktop book turns,
+- Eighteen-project Design Book with Pearl Linen pages, desktop book turns,
   mobile upward turns, direct project index, progress indicator, full-size
   viewing, keyboard controls, and reduced-motion support.
 - Skip link, semantic landmarks, visible focus states, usable touch targets,

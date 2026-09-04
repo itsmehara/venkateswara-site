@@ -590,6 +590,64 @@
     document.body.appendChild(panel);
   }
 
+  /* Every inner page's dark page-hero band is tall enough, relative to a
+     lot of real viewport heights, that the fixed bottom-right dock lands
+     directly on top of the first card's heading before any scrolling at
+     all — confirmed at 390, 768, 1440 and 1920 wide, not just mobile. The
+     exact overlap point depends on that page's hero content (a two-line
+     h1, a fact card, jump links...), so no fixed spacing tweak generalises
+     across every page. Fading the dock out until the hero has mostly
+     scrolled by — rather than guessing a safe margin per page — is what
+     actually guarantees it never covers that first screen of content.
+     Home has no .page-hero (its own immersive hero already keeps the dock
+     clear via the ticker fade), so this leaves Home alone entirely. */
+  /* A "wait until the hero scrolls by" heuristic isn't enough on its own —
+     checked at 1440x900, a short hero can still leave a two-row card grid
+     tall enough that its second row reaches the dock's corner even after
+     the hero itself is long gone. This checks the dock's actual fixed
+     footprint against real content on every scroll/resize instead of
+     guessing from hero height alone — the only way to actually guarantee
+     "never covers", since how much content it takes to reach that corner
+     is different on every page and at every width. */
+  /* Deliberately no raw img/.hero-slide here — Home's own big photographic
+     slideshow already has its own working answer to this same problem (the
+     ticker fade in style.css), and a floating icon crossing a background
+     photograph isn't the "covers content" case this is guarding against.
+     .card/.service/.split-media/.promo-media are the containers real photo
+     *content* (a product shot with a caption, not decoration) sits in. */
+  var DOCK_OVERLAP_SELECTOR =
+    ".card, .service, .promise, .split-media, .promo-media, .btn, .btn-add, " +
+    ".filter, input, textarea, select, summary, h1, h2, h3";
+  function rectsOverlap(a, b) {
+    return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+  }
+  function initDockVisibility() {
+    var dock = $(".dock");
+    if (!dock) return;
+
+    var raf = null;
+    function update() {
+      raf = null;
+      var dockRect = dock.getBoundingClientRect();
+      var candidates = $$(DOCK_OVERLAP_SELECTOR);
+      var hit = false;
+      for (var i = 0; i < candidates.length; i++) {
+        var el = candidates[i];
+        if (dock.contains(el) || el.closest(".hero")) continue;
+        var r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0 && rectsOverlap(dockRect, r)) { hit = true; break; }
+      }
+      dock.classList.toggle("is-pre-content", hit);
+    }
+    function onScrollOrResize() {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    }
+    update();
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize, { passive: true });
+  }
+
   /* ---- Bits every page fills in ------------------------------------------- */
   function fillCommon() {
     var b = D.business;
@@ -687,6 +745,13 @@
         'aria-pressed="' + (n === 0) + '">' + c.title + "</button>";
     }).join("");
 
+    var status = $("[data-filter-status]");
+    function announceCount(label, shown) {
+      if (!status) return;
+      status.textContent = shown + (shown === 1 ? " piece" : " pieces") +
+        (label === "Everything" ? " shown" : " shown in " + label);
+    }
+
     filters.addEventListener("click", function (e) {
       var b = e.target.closest("[data-filter]");
       if (!b) return;
@@ -694,10 +759,22 @@
       $$("[data-filter]", filters).forEach(function (x) {
         x.setAttribute("aria-pressed", String(x === b));
       });
+      var shown = 0;
       $$("[data-cat]", host).forEach(function (card) {
-        card.hidden = want !== "all" && card.getAttribute("data-cat") !== want;
+        var match = want === "all" || card.getAttribute("data-cat") === want;
+        card.hidden = !match;
+        if (match) {
+          shown++;
+          /* A card that was off-screen when the reveal observer ran at load
+             never got its is-in class — switching it from hidden back to
+             visible must not leave it sitting at opacity: 0. */
+          card.classList.add("is-in", "is-in-instant");
+        }
       });
+      announceCount(b.textContent, shown);
     });
+
+    announceCount("Everything", $$("[data-cat]", host).length);
   }
 
   /* ---- Services ------------------------------------------------------------ */
@@ -706,18 +783,44 @@
     if (!host) return;
     var limit = Number(host.getAttribute("data-limit")) || 0;
     var items = limit ? D.services.slice(0, limit) : D.services;
+    /* Home only: past this many cards, the rest sit behind "Show all
+       services" on mobile (see the .svc-extra CSS) — full grid, no toggle,
+       on desktop and on the Services page (no attribute there). */
+    var mobileLimit = Number(host.getAttribute("data-mobile-collapse")) || 0;
+    /* Services page only: wrap each card's bullet list in <details> so the
+       title+summary stays visible but the longer point-by-point list is a
+       tap away on mobile — desktop forces it open via CSS regardless. */
+    var wantsDetail = host.hasAttribute("data-detail-disclosure");
 
     host.innerHTML = items.map(function (s, n) {
       var title = s.title;
       var blurb = s.blurb;
       var points = s.points;
-      return '<article class="service" data-n="' + (n < 9 ? "0" : "") + (n + 1) + '" ' +
+      var extraClass = (mobileLimit && n >= mobileLimit) ? " svc-extra" : "";
+      var bullets = '<ul>' + points.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + '</ul>';
+      var bulletsMarkup = wantsDetail
+        ? '<details class="service-detail"><summary>Service details</summary>' + bullets + '</details>'
+        : bullets;
+      return '<article class="service' + extraClass + '" data-n="' + (n < 9 ? "0" : "") + (n + 1) + '" ' +
              'id="' + esc(s.id) + '" data-reveal data-reveal-delay="' + (n % 4) + '">' +
         '<h3>' + title + '</h3>' +
         '<p class="small muted">' + blurb + '</p>' +
-        '<ul>' + points.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + '</ul>' +
+        bulletsMarkup +
       '</article>';
     }).join("");
+
+    if (mobileLimit) {
+      var toggle = $("[data-services-toggle]");
+      if (toggle) {
+        toggle.addEventListener("click", function () {
+          var expanded = host.getAttribute("data-expanded") === "true";
+          host.setAttribute("data-expanded", String(!expanded));
+          toggle.setAttribute("aria-expanded", String(!expanded));
+          var label = $("[data-services-toggle-label]", toggle);
+          if (label) label.textContent = expanded ? "Show all services" : "Show fewer services";
+        });
+      }
+    }
   }
 
   function renderPromises() {
@@ -738,6 +841,18 @@
   function initQuoteForm() {
     var form = $("[data-quote-form]");
     if (!form) return;
+
+    /* The fixed WhatsApp/enquiry dock sits bottom-right — the same corner a
+       phone's on-screen keyboard pushes a focused form field toward. Shrink
+       it while any field in this form has focus, so it never sits on top of
+       what someone is actively typing into or the field below it. */
+    var dock = $(".dock");
+    if (dock) {
+      form.addEventListener("focusin", function () { dock.classList.add("is-minimized"); });
+      form.addEventListener("focusout", function (e) {
+        if (!form.contains(e.relatedTarget)) dock.classList.remove("is-minimized");
+      });
+    }
 
     var select = $("[data-service-select]", form);
     if (select) {
@@ -842,6 +957,11 @@
     Quote.init();
     initQuoteForm();
     initReveal();
+    /* Must run after every render*() above — it checks the dock's fixed
+       footprint against real card/service content, so it needs that
+       content to already exist in the DOM for its first check to mean
+       anything. */
+    initDockVisibility();
   });
 
   /* The sketchbook loads after this file and needs the same helpers. */

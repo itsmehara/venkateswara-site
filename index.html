@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="assets/css/style.css?v=10">
+<link rel="stylesheet" href="assets/css/style.css?v=15">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to main content</a>
@@ -148,13 +148,17 @@
       <div class="section-head section-head--split" data-reveal>
         <div>
           <p class="kicker">What we do</p>
-          <h2 class="misreg--tight">Cloth in.<br>Finished order out.</h2>
+          <h2 class="misreg--tight">Cloth in.<br> Finished order out.</h2>
         </div>
         <p class="lede">Seven trades under one roof, so a uniform job is a single
-          conversation instead of three suppliers blaming each other.</p>
+          conversation, and you do not have to coordinate multiple suppliers.</p>
       </div>
 
-      <div class="grid grid--3" data-services></div>
+      <div class="grid grid--3" data-services data-mobile-collapse="4"></div>
+
+      <button type="button" class="services-toggle" data-services-toggle aria-expanded="false">
+        <span data-services-toggle-label>Show all services</span>
+      </button>
 
       <p class="mt-3" style="margin-top:2rem">
         <a class="btn btn--ghost" href="services.html">Full service list</a>
@@ -175,10 +179,9 @@
         </div>
         <div>
           <p class="kicker">Bulk uniforms</p>
-          <h2>Stitched to measure.<br>Branded to match.</h2>
-          <p class="lede">Most shops either stitch or print. Venkatesh does both, which
-            is why a uniform order here does not get handed between two places
-            that never speak to each other.</p>
+          <h2>Stitched to measure.<br> Branded to match.</h2>
+          <p class="lede">Stitching and printing happen together here, giving you
+            one coordinated process from cloth to finished order.</p>
           <p>You give the sizes and the logo. The cloth is cut and stitched to
             those measurements, your mark goes on &mdash; embroidered or screen
             printed, whichever suits the fabric and the budget &mdash; and the
@@ -207,7 +210,7 @@
         </div>
         <div class="promo-body">
           <p class="kicker">Custom jute bag printing</p>
-          <h2>Thoughtfully printed.<br>Ready in quantity.</h2>
+          <h2>Thoughtfully printed.<br> Ready in quantity.</h2>
           <p class="lede">Custom jute bags for weddings, celebrations,
             institutions and business events &mdash; available with personalised
             Telugu or English printing and dependable bulk-order preparation.</p>
@@ -245,7 +248,7 @@
     <div class="wrap">
       <div class="section-head" data-reveal>
         <p class="kicker">Why people come back</p>
-        <h2>Four things we will not<br>trade away for a cheaper job</h2>
+        <h2>Four things we will not<br> trade away for a cheaper job</h2>
       </div>
       <div class="grid grid--4" data-promises></div>
     </div>
@@ -257,7 +260,7 @@
     <div class="wrap wrap--narrow" style="text-align:center" data-reveal>
       <div class="inkstrip" style="max-width:180px;margin:0 auto 2rem"><i></i><i></i><i></i><i></i></div>
       <p class="kicker" style="justify-content:center">Get a price</p>
-      <h2 class="misreg--tight">Tell us the quantity.<br>We will tell you the cost.</h2>
+      <h2 class="misreg--tight">Tell us the quantity.<br> We will tell you the cost.</h2>
       <p class="lede" style="margin-inline:auto">Every job is priced on the
         quantity, the cloth and the artwork &mdash; so there is no price list to
         mislead you. Send what you need and get a real number back.</p>
@@ -316,7 +319,7 @@
   </div>
 </footer>
 
-<script src="assets/js/data.js?v=10"></script>
-<script src="assets/js/site.js?v=10"></script>
+<script src="assets/js/data.js?v=15"></script>
+<script src="assets/js/site.js?v=15"></script>
 </body>
 </html>

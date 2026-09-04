@@ -225,6 +225,37 @@ p:last-child { margin-bottom: 0; }
 .grid--3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); }
 .grid--4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
 
+/* Home, mobile only: the seven-service grid repeats most of the Services
+   page and made the mobile Home page roughly 11,000px tall. Everything
+   past data-mobile-collapse's count is hidden by default behind the
+   "Show all services" toggle just below the grid — desktop keeps every
+   card, always, no toggle involved (see the button's own display:none
+   above 760px). */
+@media (max-width: 760px) {
+  .grid[data-mobile-collapse] .svc-extra { display: none; }
+  .grid[data-mobile-collapse][data-expanded="true"] .svc-extra { display: block; }
+}
+.services-toggle {
+  display: none;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 1.25rem;
+  padding: .7rem 1.2rem;
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--ink-soft);
+  font-weight: 800;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: all var(--dur) var(--ease);
+}
+.services-toggle:hover { border-color: var(--ink); color: var(--ink); }
+@media (max-width: 760px) {
+  .services-toggle { display: block; }
+}
+
 .section-head {
   max-width: 60ch;
   margin-bottom: clamp(2rem, 4vw, 3.5rem);
@@ -381,8 +412,8 @@ p:last-child { margin-bottom: 0; }
   display: inline-flex;
   align-items: center;
   gap: .45rem;
-  min-height: 40px;
-  padding: .45rem 1rem;
+  min-height: 44px;
+  padding: .5rem 1rem;
   border: 2px dashed var(--line-strong);
   border-radius: var(--r-pill);
   background: rgba(255, 253, 249, .9);
@@ -1019,6 +1050,22 @@ p:last-child { margin-bottom: 0; }
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
               border-color var(--dur) var(--ease);
 }
+/* The Work filters set the native `hidden` attribute on nonmatching cards,
+   but `.card { display: flex }` above has equal-or-greater author
+   specificity than the UA stylesheet's `[hidden] { display: none }`, so it
+   silently won — filtered-out cards kept their flex box and grid cell.
+   This attribute-qualified selector always outranks the plain class. */
+.card[hidden] { display: none; }
+
+/* A live status line next to the Work filters, so switching categories
+   announces how many pieces matched — for screen-reader users primarily,
+   but shown to everyone. */
+.filter-status {
+  margin: 0 0 1.25rem;
+  font-size: var(--step--1);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
 .card:hover {
   transform: translateY(-4px);
   border-color: var(--line-strong);
@@ -1135,6 +1182,49 @@ p:last-child { margin-bottom: 0; }
   transform: rotate(45deg);
 }
 
+/* Services page, mobile: the bullet list sits behind a native <details>
+   disclosure so the title + one-line summary stay the scan-friendly part
+   and the point-by-point list is a tap away, not forced scroll. Desktop
+   forces it permanently open and hides the summary control — the two
+   !important rules are overriding the UA stylesheet's own
+   `details:not([open]) > :not(summary) { display: none }`, which is normal
+   author-overridable CSS, not special browser-internal behaviour. */
+.service-detail summary {
+  margin-top: .9rem;
+  padding: .5rem 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+  font-size: .74rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.service-detail summary::-webkit-details-marker { display: none; }
+.service-detail summary::before {
+  content: "\2192";
+  margin-right: .5rem;
+  transition: transform var(--dur) var(--ease);
+}
+.service-detail[open] summary::before { transform: rotate(90deg); }
+.service-detail summary:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+/* .service ul's own plain `display: grid` is an ordinary author rule, and
+   ANY author rule beats a user-agent rule regardless of specificity — so
+   without this, that older rule alone would keep the bullet list visible
+   through the closed <details> at every width. This mobile-only rule is
+   more specific than `.service ul`, so it's what actually makes "closed"
+   mean hidden below 761px. */
+@media (max-width: 760px) {
+  .service-detail:not([open]) > ul { display: none; }
+}
+@media (min-width: 761px) {
+  .service-detail summary { display: none; }
+  .service-detail > *:not(summary) { display: grid !important; }
+}
+
 /* The promise blocks on the ink band. */
 .promise {
   padding: 1.5rem 0 0;
@@ -1151,8 +1241,8 @@ p:last-child { margin-bottom: 0; }
   margin-bottom: 2rem;
 }
 .filter {
-  min-height: 42px;
-  padding: .45rem 1.1rem;
+  min-height: 44px;
+  padding: .5rem 1.1rem;
   border: 2px solid var(--line-strong);
   border-radius: var(--r-pill);
   background: transparent;
@@ -1665,8 +1755,11 @@ p:last-child { margin-bottom: 0; }
 .footer-blurb { color: rgba(247, 243, 234, .7); font-size: var(--step--1); max-width: 40ch; }
 
 .footer-nav h4 { color: rgba(247, 243, 234, .5); margin-bottom: 1rem; }
-.footer-nav ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .55rem; }
+.footer-nav ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .1rem; }
 .footer-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: rgba(247, 243, 234, .8);
   text-decoration: none;
   font-size: var(--step--1);
@@ -1837,7 +1930,12 @@ p:last-child { margin-bottom: 0; }
   flex: none;
 }
 .quote-head h2 { margin: 0; font-size: 1rem; }
+/* Kept visually compact (32px) to match the panel's tight header, but a
+   44px invisible hit area sits behind it via ::before — the pseudo-element
+   is still part of the button for click/tap purposes, so the touch target
+   grows without the circle itself looking oversized. */
 .quote-close {
+  position: relative;
   display: grid;
   place-items: center;
   width: 32px; height: 32px;
@@ -1847,6 +1945,11 @@ p:last-child { margin-bottom: 0; }
   font-size: 1.1rem;
   line-height: 1;
   flex: none;
+}
+.quote-close::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
 }
 .quote-close:hover { background: var(--paper-3); }
 
@@ -1877,6 +1980,7 @@ p:last-child { margin-bottom: 0; }
 .quote-item-name { font-size: .84rem; font-weight: 700; line-height: 1.25; }
 .quote-item-meta { font-size: .7rem; color: var(--ink-faint); }
 .quote-remove {
+  position: relative;
   width: 30px; height: 30px;
   border: 0;
   border-radius: 50%;
@@ -1885,6 +1989,11 @@ p:last-child { margin-bottom: 0; }
   font-size: 1.05rem;
   line-height: 1;
   flex: none;
+}
+.quote-remove::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
 }
 .quote-remove:hover { background: rgba(216, 35, 42, .12); color: var(--red); }
 
@@ -1928,7 +2037,7 @@ p:last-child { margin-bottom: 0; }
 }
 .quote-foot textarea { min-height: 2.3rem; }
 .quote-send {
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 1rem;
   font-size: .78rem;
   background: #25d366;
@@ -1944,6 +2053,14 @@ p:last-child { margin-bottom: 0; }
   line-height: 1.4;
 }
 
+/* Tablet gets the same compact, icon-first dock as mobile — a full "My
+   Enquiry" text pill at 768px still reaches into filter/product-action
+   territory on some pages. */
+@media (max-width: 820px) {
+  .quote-fab .fab-text { display: none; }
+  .quote-fab { padding: 0 .9rem; }
+}
+
 @media (max-width: 560px) {
   .quote-panel {
     right: .8rem; left: .8rem;
@@ -1952,8 +2069,30 @@ p:last-child { margin-bottom: 0; }
     bottom: calc(.8rem + 112px);
   }
   .quote-items { max-height: 30vh; }
-  .quote-fab { padding: 0 .9rem; }
-  .quote-fab .fab-text { display: none; }
+}
+
+/* Set from site.js while a quote-form field has focus, so the keyboard and
+   the field the visitor is actually typing into are never fought over by a
+   fixed dock sitting in the same corner. Shrinks rather than disappears —
+   both controls stay reachable, just out of the way. */
+.dock.is-minimized {
+  transform: scale(.72);
+  transform-origin: bottom right;
+  opacity: .55;
+  pointer-events: none;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+/* Set from site.js on every page with a .page-hero: keeps the dock out of
+   the way until that hero band has scrolled mostly past, since it would
+   otherwise sit directly on the first card/heading below it on initial
+   load — confirmed at every reviewed width, not just mobile. */
+.dock.is-pre-content {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease), visibility 0s linear var(--dur);
 }
 
 /* ---------- 13. Lightbox ------------------------------------------------- */

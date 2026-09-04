@@ -532,6 +532,45 @@
 }
 
 /* ---------- 8. Index ------------------------------------------------------ */
+/* Mobile: the 19-project index sits behind a native <details> disclosure —
+   "Browse all N projects" — instead of always rendering the full flex-wrap
+   tail below the fold. Desktop forces it open and hides the summary
+   control entirely, same technique as .service-detail in style.css. */
+.sb-index-wrap summary {
+  margin-top: 1.75rem;
+  padding: .6rem 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: .95rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-top: 1px solid var(--line);
+}
+.sb-index-wrap summary::-webkit-details-marker { display: none; }
+.sb-index-wrap summary::after {
+  content: "\2193";
+  transition: transform var(--dur) var(--ease);
+}
+.sb-index-wrap[open] summary::after { transform: rotate(180deg); }
+.sb-index-wrap summary:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+/* .sb-index's own plain `display: flex` below is an ordinary author rule
+   and beats the UA's details:not([open]) hidden-content rule regardless of
+   specificity — this mobile-only, more specific rule is what actually
+   makes "closed" mean hidden below 761px. */
+@media (max-width: 760px) {
+  .sb-index-wrap:not([open]) > .sb-index { display: none; }
+}
+@media (min-width: 761px) {
+  .sb-index-wrap summary { display: none; }
+  .sb-index-wrap > *:not(summary) { display: flex !important; }
+}
 .sb-index {
   display: flex;
   flex-wrap: wrap;
@@ -543,7 +582,8 @@
 }
 .sb-index button {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  min-height: 44px;
   gap: .45rem;
   padding: .42rem .9rem;
   border: 1px solid var(--line-strong);

@@ -18,7 +18,7 @@
   var UI = window.SVUI, D = window.SV;
   if (!UI || !D) return;
 
-  var TURN_MS = 900;
+  var TURN_MS = 680;
   var TURN_EASE = "cubic-bezier(.36, .06, .28, 1)";
 
   function pad(n) { return n < 10 ? "0" + n : String(n); }
@@ -62,7 +62,10 @@
         'Click a piece to see it full size.</p>' +
       '<p class="visually-hidden" data-announce role="status" aria-live="polite"></p>' +
 
-      '<ol class="sb-index" data-index></ol>';
+      '<details class="sb-index-wrap">' +
+        '<summary>Browse all ' + items.length + ' projects</summary>' +
+        '<ol class="sb-index" data-index></ol>' +
+      '</details>';
 
     var $ = function (sel) { return root.querySelector(sel); };
     var book      = $(".sb-book");
