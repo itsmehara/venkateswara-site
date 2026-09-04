@@ -54,7 +54,7 @@ window.SV = (function () {
              "shape through wash after wash. Event tees,team kits, college " +
              "batches, family functions.",
       icon: "tshirt",
-      image: "assets/img/products/tshirt-legends-flatlay.jpg",
+      image: "assets/img/products/tshirt-legends-flatlay_a.jpg",
       points: [
         "Screen printing in one colour or many",
         "Front, back, sleeve and pocket placements",
@@ -153,13 +153,9 @@ window.SV = (function () {
   var work = [
     {
       id: "tee-legends",
-      /* Tall and narrow (1228x2048), so on a wide book leaf it would sit in
-         a column of empty paper. Cropped top and bottom in the design book
-         only — the gallery card and the full-size view are both uncut. */
-      bookFit: "fill",
       title: "Event T-Shirt — Multi-Colour Print",
       category: "tshirts",
-      image: "assets/img/products/tshirt-legends-flatlay.jpg",
+      image: "assets/img/products/tshirt-legends-flatlay_a.jpg",
       provenance: "real",
       alt: "Black T-shirt printed with a white and yellow birthday design",
       note: "Black cotton tee, multi-colour screen print across the chest.",

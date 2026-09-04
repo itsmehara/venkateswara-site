@@ -1,131 +1,149 @@
-# Sri Venkateswara Screen &amp; Textile Printing Works
+# Sri Venkateswara Screen & Textile Printing Works
 
-The website for Sri Venkateswara Screen &amp; Textile Printing Works — screen
-printing, bulk uniform stitching, custom caps, cloth flags and jute bag
-printing in Anakapalle, Visakhapatnam district, Andhra Pradesh. Proprietor:
-Venkatesh.
+The standalone website for **Sri Venkateswara Screen & Textile Printing
+Works**, a screen-printing and textile business in Anakapalle, Visakhapatnam
+district, Andhra Pradesh.
 
-**This folder is the whole site.** It is plain HTML, CSS and JavaScript with no
-build step, no framework and no dependencies. What is here is exactly what gets
-served — deploy the folder as it stands.
+- **Site repository:** <https://github.com/itsmehara/venkateswara-site>
+- **Production workspace:** <https://github.com/itsmehara/venkateswara-workspace>
 
-## Deploying
+This repository is the complete deployable site. It uses plain HTML, CSS, and
+JavaScript with no framework, backend, database, production dependency, or
+build step. The files in this repository are served directly.
 
-### GitHub Pages
-
-1. Push this folder as the root of a repository.
-2. Repository → Settings → Pages → Source: *Deploy from a branch*,
-   branch `main`, folder `/ (root)`.
-3. The `.nojekyll` file is already here so GitHub serves the files as they are.
-
-### Anywhere else
-
-Upload the folder to any static host — Netlify, Cloudflare Pages, Vercel, or
-ordinary cPanel hosting. There is nothing to install or compile.
-
-### After the first deploy
-
-Replace `REPLACE-WITH-YOUR-DOMAIN` in `robots.txt` and `sitemap.xml` with the
-real address, and change the `og:image` and canonical addresses in each page's
-`<head>` to absolute URLs so link previews work when the site is shared.
-
-## Running it locally
+## Run locally
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Then open <http://localhost:4173>. Opening the `.html` files directly with
-`file://` will not work — the pages load their assets by relative path.
+Open <http://localhost:4173/>. Use an HTTP server rather than opening the files
+through `file://`.
 
-## Layout
+## Pages
 
+| File | Purpose |
+|---|---|
+| `index.html` | Seven-slide responsive hero, services, featured work, jute promotion, promises, and calls to action |
+| `services.html` | Seven services, bulk-order process, print/embroidery comparison, couple tees, and jute-bag workflow |
+| `work.html` | Filterable nineteen-project gallery with provenance labels, full-size viewing, and enquiry actions |
+| `sketchbook.html` | Pearl Linen Design Book with one portfolio project per spread and responsive page-turn behavior |
+| `about.html` | Workshop, working approach, promises, and proprietor introduction |
+| `contact.html` | Contact details, quote checklist, WhatsApp actions, and map search |
+
+## Project structure
+
+```text
+assets/css/style.css        Shared visual system and responsive components
+assets/css/sketchbook.css   Design Book layout, material, and turn presentation
+assets/js/data.js           Business details, 7 services, 19 projects, promises
+assets/js/site.js           Navigation, hero, gallery, lightbox, enquiry, bindings
+assets/js/sketchbook.js     Design Book rendering and page-turn interactions
+assets/img/                 37 web-ready brand, hero, product, and texture files
+*.html                      Six directly served pages
+robots.txt                  Crawler rules and sitemap location
+sitemap.xml                 Six-page sitemap; final domain still required
+.nojekyll                   Prevents GitHub Pages from applying Jekyll
 ```
-index.html          Home — hero slideshow (7 slides), jute promo banner, services, featured work
-services.html       Every service, how a bulk order runs, print vs embroidery,
-                     a couple-tees showcase, and the jute bag process story
-work.html           Filterable gallery; each piece can be added to an enquiry
-sketchbook.html     The design book, one spread per piece, with a page turn
-about.html          The workshop and the man who runs it
-contact.html        Phone, WhatsApp, email, address, what to send for a quote
 
-assets/css/style.css       The entire design system
-assets/css/sketchbook.css  Only the design book needs this
-assets/js/data.js          All content: business details, services, work list
-assets/js/site.js          Nav, hero, reveals, lightbox, the enquiry list
-assets/js/sketchbook.js    The page turn
-assets/img/                Web-sized images (originals live outside this folder)
-```
+## Main features
 
-### The hero slideshow loads images just-in-time, not all at once
+- Responsive navigation, layout, images, and typography.
+- Seven-slide homepage hero with separate desktop/mobile sources and deferred
+  loading after the first slide.
+- Central data model shared by services, gallery, enquiry, and Design Book.
+- Filterable work gallery and keyboard-accessible lightbox.
+- Browser-local enquiry shortlist that prepares a WhatsApp message; nothing is
+  transmitted until the visitor chooses to send it.
+- Honest **Delivered work** and **Sample** labels driven by each project's
+  `provenance` field.
+- Nineteen-project Design Book with Pearl Linen pages, desktop book turns,
+  mobile upward turns, direct project index, progress indicator, full-size
+  viewing, keyboard controls, and reduced-motion support.
+- Skip link, semantic landmarks, visible focus states, usable touch targets,
+  image alternative text, and `prefers-reduced-motion` handling.
 
-Every `.hero-slide` after the first ships with `data-src`/`data-srcset` instead
-of `src`/`srcset` — native `loading="lazy"` does not work here (every slide is
-`position: absolute` inside an always-visible container, so the browser
-considers all of them "in view" regardless of the attribute). `site.js`'s
-`loadSlide()` swaps in the real attributes only when a slide is about to be
-shown. **If you add an 8th slide, copy this pattern** — a slide shipped with a
-plain `src` will simply download immediately on every page load, which is the
-exact problem this was built to avoid. The one exception is the first slide,
-which keeps `src`/`srcset`/`fetchpriority="high"` and loads eagerly on purpose.
+## Updating content
 
-## Changing the content
+Most editable content lives in [`assets/js/data.js`](assets/js/data.js):
 
-Almost everything the pages display comes from **`assets/js/data.js`** — the
-phone numbers, the address, the service list and the work gallery. Edit that one
-file and every page updates. There is no second list to keep in step.
+- `business` — identity, contact details, address, and WhatsApp number
+- `services` — service descriptions and related images
+- `work` — portfolio content, categories, provenance, notes, and image paths
+- `promises` — reusable trust statements
+- `sketchbook` — derived automatically from work items that have images
 
-The shared header and footer are stamped into each page by
-`../scripts/build-pages.py` (which lives outside this folder, with the project
-working files). Run it after editing that script, then commit the generated
-`.html` files like any other source. The site itself never runs it.
+Do not maintain a separate Design Book list. Add or update the item in `work`.
+Keep these fields accurate:
 
-## Two things to keep honest
+- `provenance: "real"` — work delivered to a customer
+- `provenance: "mock"` — a demonstration/sample presentation
+- `whatsapp` — country code and digits only, suitable for `wa.me`
 
-**1. Real work versus samples.** Every item in `data.js` carries a `provenance`
-field:
+The shared page shell is maintained in the workspace repository's
+`scripts/build-pages.py`. Running that script rewrites its generated HTML pages;
+always review the resulting diff. `index.html` is hand-maintained.
 
-- `"real"` — a photograph of work actually delivered to a customer.
-- `"mock"` — a demonstration of what a finished order looks like.
+## Hero image loading
 
-The gallery, the design book and the enquiry list all label these differently,
-on purpose. Several images in this site are generated presentations rather than
-photographs of stock, and a customer must never be led to think otherwise. Do
-not change a `"mock"` to `"real"` without a real photograph to replace it with.
+The first hero image loads eagerly with high fetch priority. Later slides keep
+their URLs in `data-src` and `data-srcset`; `assets/js/site.js` loads the next
+slide shortly before it is shown. Preserve that pattern when adding another
+slide. Native `loading="lazy"` is not sufficient because all absolutely
+positioned slides appear in the visible hero container.
 
-An item may also carry `bookFit: "fill"`. That is a *display* setting for the
-design book only: a piece far taller than the book's leaf gives up its margins
-and is cropped top and bottom, rather than sitting in a column of empty paper.
-The gallery card and the full-size view always show the whole piece uncut, so
-nothing is hidden from the customer — use it for shape, never to hide a flaw.
+## Design Book
 
-**2. Things we do not know yet.** The shop's founding year and opening hours are
-deliberately absent, and the pages say so rather than guessing. The Google Maps
-link searches for the bazar instead of dropping a pin. Fill these in from
-`data.js` (`business.hours`, `business.since`) once Venkatesh confirms them.
+The final page material is
+[`assets/img/sketchbook/linen-bg.jpg`](assets/img/sketchbook/linen-bg.jpg), a
+repeatable warm Pearl Linen texture. It is tiled on both leaves and page edges,
+not stretched. Project numbering uses **Project NN / MM** on the information
+page and **NN / MM** in the progress indicator; the former “Plate” terminology
+has been removed from visible UI.
 
-## Design Book texture — currently CSS, may become a real image
+The Design Book reads the same `work` array used by the gallery. Its enquiry
+button uses the shared local-storage list, and its full-size action uses the
+shared lightbox.
 
-`sketchbook.css`'s `.sb-leaf` background is a red "Rosso Levanto" marble look
-built entirely from gradients — no image file. It's a placeholder for a real
-photographed or AI-generated marble texture the owner is sourcing; see
-`REGISTRY.md` section 3m/"Start here" for the exact swap instructions and
-where the candidate image lands (`images/processed/batch-marble-texture/`,
-outside this deployed folder).
+## Deployment
 
-## The enquiry list
+### GitHub Pages
 
-Pressing "Add to enquiry" on any piece stores its id in `localStorage`, and the
-floating panel builds a `wa.me` link containing the list, the visitor's name and
-their note. Nothing is sent until the visitor presses send in WhatsApp itself —
-the site has no server and collects nothing.
+1. Push this repository to GitHub.
+2. Open **Settings → Pages**.
+3. Choose **Deploy from a branch**.
+4. Select the published branch (currently `master`) and `/ (root)`.
 
-The destination number is `business.whatsapp` in `data.js`, in `wa.me` form:
-country code, digits only, no `+` or spaces.
+The included `.nojekyll` file ensures the static files are served unchanged.
+
+### Other static hosts
+
+Upload the repository contents as-is to Netlify, Cloudflare Pages, Vercel,
+cPanel, or another static host. There is no build command; the publish directory
+is the repository root.
+
+## Before public launch
+
+- Replace `REPLACE-WITH-YOUR-DOMAIN` in `robots.txt` and `sitemap.xml`.
+- Add canonical URLs after the final domain is known.
+- Convert each relative `og:image` value to an absolute production URL.
+- Confirm the opening hours, founding year, and exact Google Maps pin.
+- Owner-proof customer artwork, dates, and small lettering in reconstructed
+  portfolio images.
+- Test every page, hero slide, filter, lightbox, enquiry action, phone/email
+  link, WhatsApp message, keyboard flow, and mobile layout on the deployed site.
+
+## Privacy and external services
+
+The site has no server-side form, user account, analytics package, or database.
+The enquiry list and optional name/note remain in the visitor's browser until
+they open WhatsApp. The browser may contact Google Fonts, Google Maps, and
+WhatsApp when their resources or links are used; those services have their own
+terms and privacy policies.
 
 ## Licensing
 
 This is a proprietary business website, not an open-source template. See
 [`LICENSE.md`](LICENSE.md) for the All Rights Reserved notice and
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for fonts and other materials
-that remain under their respective licences.
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for Google Fonts and other
+materials that remain under their respective licences.
