@@ -76,22 +76,6 @@
   color-scheme: light;
 }
 
-/* Anton is a Latin poster face with no Telugu or Devanagari glyphs, so
-   headings would silently fall through to the body font's own fallback
-   chain in those scripts — readable, but visibly not "the house display
-   face" the way it is in English. Swapping both custom properties here
-   (fetched only for the active script, see ensureScriptFont() in site.js)
-   means every existing var(--display)/var(--body) rule in this file picks
-   the right typeface automatically, with no per-selector changes needed. */
-html.lang-te {
-  --display: "Noto Sans Telugu", "Manrope", sans-serif;
-  --body:    "Noto Sans Telugu", ui-sans-serif, system-ui, sans-serif;
-}
-html.lang-hi {
-  --display: "Noto Sans Devanagari", "Manrope", sans-serif;
-  --body:    "Noto Sans Devanagari", ui-sans-serif, system-ui, sans-serif;
-}
-
 /* ---------- 2. Reset ----------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -512,35 +496,6 @@ p:last-child { margin-bottom: 0; }
 }
 .site-nav .nav-cta:hover { background: var(--red-deep); }
 
-/* .site-nav only had one child (the <ul>) before the language switcher; it
-   needs its own flex row now so the switcher sits beside the links on
-   desktop instead of stacking under them by block default. */
-.site-nav { display: flex; align-items: center; gap: 1rem; }
-
-.lang-switch {
-  display: flex;
-  align-items: center;
-  gap: .3rem;
-  flex-wrap: wrap;
-}
-.lang-switch button {
-  padding: .35rem .6rem;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill);
-  background: transparent;
-  color: var(--ink-soft);
-  font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: .02em;
-  line-height: 1.2;
-}
-.lang-switch button:hover { border-color: var(--ink); color: var(--ink); }
-.lang-switch button[aria-pressed="true"] {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
-}
-
 .nav-toggle {
   display: none;
   align-items: center;
@@ -586,11 +541,9 @@ p:last-child { margin-bottom: 0; }
     transition: all var(--dur) var(--ease);
   }
   .site-nav.is-open { transform: none; opacity: 1; visibility: visible; }
-  .site-nav { flex-direction: column; align-items: stretch; }
   .site-nav ul { flex-direction: column; align-items: stretch; gap: .15rem; }
   .site-nav a { padding: .85rem 1rem; font-size: .95rem; border-radius: var(--r); }
   .site-nav .nav-cta { margin: .5rem 0 0; text-align: center; }
-  .lang-switch { justify-content: center; padding: .75rem 0 .25rem; border-top: 1px solid var(--line); margin-top: .5rem; }
 }
 
 /* ---------- 8. Hero ------------------------------------------------------ */
@@ -941,6 +894,19 @@ p:last-child { margin-bottom: 0; }
   color: var(--white);
   border-block: 2px solid var(--ink);
 }
+/* On the home page the hero+ticker are sized to fill exactly one viewport,
+   so on initial load the ticker sits right where the fixed WhatsApp/enquiry
+   dock also lives, bottom-right. Rather than move either one, the marquee
+   text is faded to solid red before it reaches the dock's corner, so the
+   dock always sits on plain colour rather than covering scrolling text. */
+.ticker::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(190px, 34vw);
+  background: linear-gradient(to right, transparent, var(--red) 65%);
+  pointer-events: none;
+}
 .ticker-track {
   display: flex;
   width: max-content;
@@ -1245,14 +1211,114 @@ p:last-child { margin-bottom: 0; }
 
 /* ---------- 10b. Inner page furniture ------------------------------------ */
 /* The band at the top of every page that is not the home page. Shorter than
-   the hero, same ink, so the site reads as one press run. */
+   the hero, same ink, so the site reads as one press run. Padding trimmed
+   from an earlier, taller cut (3rem/7vw/5.5rem top, 4rem bottom) — stacked
+   against .section's own top padding it left a blank cream band before any
+   real content appeared; see the 2026-09-04 density review in
+   docs/design-review/. */
 .page-hero {
   position: relative;
-  padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(2.25rem, 5.5vw, 4rem) 0 clamp(1.75rem, 3.5vw, 3rem);
   overflow: hidden;
 }
-.page-hero h1 { max-width: 18ch; }
+/* Headline was sized off the same scale as the home hero (--step-3, up to
+   4rem) with only a couple of lines of supporting copy under it — bold, but
+   oversized for what it's introducing. Capped lower here; still the same
+   condensed poster face. */
+.page-hero h1 { max-width: 18ch; font-size: clamp(2.1rem, 1.6rem + 2.1vw, 3.35rem); }
 .page-hero .lede { margin-top: 1rem; }
+
+/* The section immediately after a page-hero would otherwise add its own
+   full top padding on top of the hero's bottom padding — two paddings
+   stacking into one long gap before the first real content. Trimmed here
+   rather than on .section generally, so section-to-section rhythm further
+   down the page (which isn't preceded by a dark intro) is untouched.
+   Excludes .section--tight: the Design Book already pairs its page-hero
+   with a page-scoped, deliberately tighter .section--tight override (see
+   sketchbook.css) and does not need a second, competing adjustment here. */
+.page-hero + .section:not(.section--tight) { padding-top: clamp(1.75rem, 4vw, 3rem); }
+
+/* Two-column page-hero intro: heading/lede on the left, page-specific
+   content (jump links, quick facts, quick actions) on the right, so the
+   space beside a two-line heading on a wide screen does something useful
+   instead of sitting empty. Below 900px there isn't room for a real second
+   column, so it stacks — the aside content still appears, just after the
+   intro rather than beside it. */
+.page-hero--split .wrap {
+  display: grid;
+  gap: clamp(1.75rem, 4vw, 3rem);
+}
+@media (min-width: 900px) {
+  .page-hero--split .wrap {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    align-items: end;
+  }
+}
+
+.page-hero-aside {
+  display: grid;
+  gap: .6rem;
+  align-content: start;
+}
+.page-hero-aside .kicker { color: #ff6b6b; }
+
+/* A short list of same-page jump links (Services: the trades/steps/finishes
+   further down). Styled as rows, not pills, so it reads as a compact index
+   rather than another row of buttons competing with the real CTAs. */
+.hero-jumplist {
+  display: grid;
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hero-jumplist a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .8rem 1.05rem;
+  border: 1px solid rgba(247, 243, 234, .22);
+  border-radius: var(--r);
+  color: var(--paper);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: var(--step--1);
+  letter-spacing: .02em;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.hero-jumplist a::after { content: "\2192"; color: var(--red-lit); font-weight: 800; flex: none; }
+.hero-jumplist a:hover { border-color: rgba(247, 243, 234, .55); background: rgba(247, 243, 234, .06); }
+
+/* A compact fact card (About: who/where/what, using only information the
+   site already states elsewhere — no invented stats). */
+.hero-facts {
+  display: grid;
+  gap: .85rem;
+  padding: 1.15rem 1.3rem;
+  border: 1px solid rgba(247, 243, 234, .18);
+  border-radius: var(--r-lg);
+  background: rgba(247, 243, 234, .05);
+}
+.hero-facts > div + div { padding-top: .85rem; border-top: 1px solid rgba(247, 243, 234, .12); }
+.hero-facts dt {
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(247, 243, 234, .55);
+  margin-bottom: .2rem;
+}
+.hero-facts dd { margin: 0; font-size: var(--step-0); font-weight: 700; color: var(--paper); }
+
+/* Contact/Work re-use .filters and .btn inside a dark page-hero, where their
+   default border/background assume a light section. */
+.page-hero-aside .filters { margin-bottom: 0; }
+.page-hero-aside .filter { border-color: rgba(247, 243, 234, .32); color: var(--paper); }
+.page-hero-aside .filter:hover { border-color: var(--paper); }
+.page-hero-aside .filter[aria-pressed="true"] { background: var(--paper); border-color: var(--paper); color: var(--ink); }
+.page-hero-aside .note { background: rgba(247, 243, 234, .07); color: rgba(247, 243, 234, .8); }
+.page-hero-aside .note strong { color: var(--paper); }
 
 .breadcrumb {
   margin: 0 0 1.5rem;
@@ -1626,22 +1692,24 @@ p:last-child { margin-bottom: 0; }
    clear of the safe area on a phone. */
 .dock {
   position: fixed;
-  right: clamp(.9rem, 2.5vw, 1.6rem);
-  bottom: clamp(.9rem, 2.5vw, 1.6rem);
-  bottom: max(clamp(.9rem, 2.5vw, 1.6rem), env(safe-area-inset-bottom));
+  right: clamp(.8rem, 2vw, 1.3rem);
+  bottom: clamp(.8rem, 2vw, 1.3rem);
+  bottom: max(clamp(.8rem, 2vw, 1.3rem), env(safe-area-inset-bottom));
   z-index: 70;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: .75rem;
+  gap: .55rem;
 }
 
-/* WhatsApp — the familiar green circle, drawn rather than downloaded. */
+/* WhatsApp — the familiar green circle, drawn rather than downloaded.
+   Sized down from 58px: at desktop width the pair of controls read as
+   visually heavy against page content sitting behind/below them. */
 .wa-fab {
   position: relative;
   display: grid;
   place-items: center;
-  width: 58px; height: 58px;
+  width: 48px; height: 48px;
   border-radius: 50%;
   background: #25d366;
   color: #fff;
@@ -1650,7 +1718,7 @@ p:last-child { margin-bottom: 0; }
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 .wa-fab:hover { transform: scale(1.07); }
-.wa-fab svg { width: 32px; height: 32px; }
+.wa-fab svg { width: 26px; height: 26px; }
 /* A slow ring, so it is noticed once without nagging. */
 .wa-fab::after {
   content: "";
@@ -1691,14 +1759,14 @@ p:last-child { margin-bottom: 0; }
   position: relative;
   display: flex;
   align-items: center;
-  gap: .6rem;
-  height: 58px;
-  padding: 0 1.35rem;
+  gap: .5rem;
+  height: 48px;
+  padding: 0 1.1rem;
   border: 2px solid var(--ink);
   border-radius: var(--r-pill);
   background: var(--ink);
   color: var(--paper);
-  font-size: .78rem;
+  font-size: .74rem;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1706,17 +1774,17 @@ p:last-child { margin-bottom: 0; }
   transition: transform var(--dur) var(--ease);
 }
 .quote-fab:hover { transform: translateY(-2px); }
-.quote-fab svg { width: 20px; height: 20px; }
+.quote-fab svg { width: 18px; height: 18px; }
 
 .quote-count {
   display: grid;
   place-items: center;
-  min-width: 24px; height: 24px;
-  padding: 0 .4rem;
+  min-width: 21px; height: 21px;
+  padding: 0 .35rem;
   border-radius: var(--r-pill);
   background: var(--red);
   color: var(--white);
-  font-size: .72rem;
+  font-size: .68rem;
   font-variant-numeric: tabular-nums;
 }
 .quote-fab[data-empty="true"] .quote-count { display: none; }
@@ -1738,8 +1806,8 @@ p:last-child { margin-bottom: 0; }
    region once it is genuinely long. */
 .quote-panel {
   position: fixed;
-  right: clamp(.9rem, 2.5vw, 1.6rem);
-  bottom: calc(clamp(.9rem, 2.5vw, 1.6rem) + 140px);
+  right: clamp(.8rem, 2vw, 1.3rem);
+  bottom: calc(clamp(.8rem, 2vw, 1.3rem) + 118px);
   z-index: 71;
   width: min(calc(100vw - 1.8rem), 360px);
   max-height: min(80vh, 600px);
@@ -1878,13 +1946,13 @@ p:last-child { margin-bottom: 0; }
 
 @media (max-width: 560px) {
   .quote-panel {
-    right: .9rem; left: .9rem;
+    right: .8rem; left: .8rem;
     width: auto;
     max-height: min(72vh, 520px);
-    bottom: calc(.9rem + 132px);
+    bottom: calc(.8rem + 112px);
   }
   .quote-items { max-height: 30vh; }
-  .quote-fab { padding: 0 1rem; }
+  .quote-fab { padding: 0 .9rem; }
   .quote-fab .fab-text { display: none; }
 }
 
@@ -1948,6 +2016,7 @@ p:last-child { margin-bottom: 0; }
   transition: opacity .7s var(--ease), transform .7s var(--ease);
 }
 [data-reveal].is-in { opacity: 1; transform: none; }
+[data-reveal].is-in-instant { transition: none; }
 [data-reveal-delay="1"] { transition-delay: .08s; }
 [data-reveal-delay="2"] { transition-delay: .16s; }
 [data-reveal-delay="3"] { transition-delay: .24s; }

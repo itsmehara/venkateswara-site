@@ -46,10 +46,10 @@
         '<div class="sb-nav-row">' +
           '<button type="button" class="sb-nav" data-prev>' +
             '<span aria-hidden="true">&lsaquo;</span>' +
-            '<span class="visually-hidden" data-i18n="runtime.designBook.previousProject">Previous project</span></button>' +
+            '<span class="visually-hidden">Previous project</span></button>' +
           '<button type="button" class="sb-nav" data-next>' +
             '<span aria-hidden="true">&rsaquo;</span>' +
-            '<span class="visually-hidden" data-i18n="runtime.designBook.nextProject">Next project</span></button>' +
+            '<span class="visually-hidden">Next project</span></button>' +
         '</div>' +
       '</div>' +
 
@@ -58,7 +58,7 @@
         '<div class="sb-progress" aria-hidden="true"><span data-progress-fill></span></div>' +
       '</div>' +
 
-      '<p class="sb-hint" data-i18n="runtime.designBook.instructions">Turn the pages with the buttons or the arrow keys. ' +
+      '<p class="sb-hint">Turn the pages with the buttons or the arrow keys. ' +
         'Click a piece to see it full size.</p>' +
       '<p class="visually-hidden" data-announce role="status" aria-live="polite"></p>' +
 
@@ -78,7 +78,7 @@
 
     function buildIndex() {
       indexList.innerHTML = items.map(function (it, i) {
-        var title = UI.tr("work." + it.id + ".title") || it.title;
+        var title = it.title;
         return '<li><button type="button" data-go="' + i + '">' +
           '<span class="n">' + pad(i + 1) + "</span>" +
           "<span>" + title + "</span></button></li>";
@@ -94,9 +94,8 @@
       var it = items[i];
       if (!it) return "";
       var mock = it.provenance === "mock";
-      var alt = UI.tr("work." + it.id + ".alt") || it.alt;
-      var provLabel = mock ? (UI.tr("common.provenance.sample") || "Sample")
-                            : (UI.tr("common.provenance.real") || "Delivered work");
+      var alt = it.alt;
+      var provLabel = mock ? "Sample" : "Delivered work";
       /* No plate number here any more — "Project NN / MM" on the facing page
          already carries it, so a second number on this side was redundant.
          The provenance badge (Delivered work / Sample) is the only thing
@@ -117,35 +116,34 @@
       if (!it) return "";
       var mock = it.provenance === "mock";
       var service = D.services.filter(function (s) { return s.id === it.category; })[0];
-      var title = UI.tr("work." + it.id + ".title") || it.title;
-      var note  = UI.tr("work." + it.id + ".note")  || it.note;
-      var spec  = UI.tr("work." + it.id + ".spec")  || it.spec;
-      var serviceTitle = service ? (UI.tr("services." + service.id + ".title") || service.title) : "&mdash;";
+      var title = it.title;
+      var note  = it.note;
+      var spec  = it.spec;
+      var serviceTitle = service ? service.title : "&mdash;";
       var projectDesc = mock
-        ? (UI.tr("runtime.designBook.sampleDescription") || "A sample presentation, not a photograph of stock")
-        : (UI.tr("runtime.designBook.realDescription") || "A photograph of work delivered to a customer");
+        ? "A sample presentation, not a photograph of stock"
+        : "A photograph of work delivered to a customer";
 
       return '<div class="sb-notes">' +
         '<p class="sb-notes-kicker">' +
-          UI.esc((UI.trf("runtime.designBook.projectCount", { current: pad(i + 1), total: pad(items.length) })) ||
-                 ("Project " + pad(i + 1) + " / " + pad(items.length))) + "</p>" +
+          UI.esc("Project " + pad(i + 1) + " / " + pad(items.length)) + "</p>" +
         "<h3>" + title + "</h3>" +
         '<hr class="sb-rule">' +
         '<p class="sb-notes-desc">' + UI.esc(note) + "</p>" +
         '<ul class="sb-notes-meta">' +
-          '<li><span class="k">' + UI.esc(UI.tr("runtime.designBook.service") || "Service") + '</span><span class="v">' +
+          '<li><span class="k">' + UI.esc("Service") + '</span><span class="v">' +
             serviceTitle + "</span></li>" +
-          '<li><span class="k">' + UI.esc(UI.tr("runtime.designBook.project") || "Project") + '</span><span class="v">' +
+          '<li><span class="k">' + UI.esc("Project") + '</span><span class="v">' +
             UI.esc(projectDesc) +
           "</span></li>" +
-          '<li><span class="k">' + UI.esc(UI.tr("runtime.designBook.notes") || "Notes") + '</span><span class="v">' + UI.esc(spec) + "</span></li>" +
+          '<li><span class="k">' + UI.esc("Notes") + '</span><span class="v">' + UI.esc(spec) + "</span></li>" +
         "</ul>" +
         '<div class="sb-notes-actions">' +
-          '<button type="button" class="sb-tool" data-open-full>' + UI.esc(UI.tr("common.actions.fullSize") || "View full size") + '</button>' +
+          '<button type="button" class="sb-tool" data-open-full>' + UI.esc("View full size") + '</button>' +
           '<button type="button" class="sb-tool sb-tool--primary" data-add="' + UI.esc(it.id) + '" ' +
                   'aria-pressed="false">' +
             '<span aria-hidden="true">+</span> ' +
-            '<span class="btn-add-text">' + UI.esc(UI.tr("common.actions.addEnquiry") || "Add to enquiry") + '</span></button>' +
+            '<span class="btn-add-text">' + UI.esc("Add to enquiry") + '</span></button>' +
         "</div>" +
       "</div>";
     }
@@ -164,8 +162,7 @@
       var on = stored.indexOf(btn.getAttribute("data-add")) !== -1;
       btn.setAttribute("aria-pressed", String(on));
       var label = btn.querySelector(".btn-add-text");
-      if (label) label.textContent = on ? (UI.tr("common.actions.added") || "Added")
-                                         : (UI.tr("common.actions.addEnquiry") || "Add to enquiry");
+      if (label) label.textContent = on ? "Added" : "Add to enquiry";
     }
 
     function setChrome() {
@@ -174,25 +171,14 @@
          indicator (and the progress track beside it) stays terse. */
       counter.textContent = pad(index + 1) + " / " + pad(items.length);
       if (progress) progress.style.width = ((index + 1) / items.length * 100) + "%";
-      var title = UI.plain(UI.tr("work." + items[index].id + ".title") || items[index].title);
-      announce.textContent = UI.trf("runtime.designBook.projectAria",
-        { current: index + 1, total: items.length, title: title }) ||
-        ("Project " + (index + 1) + " of " + items.length + ", " + title);
+      var title = UI.plain(items[index].title);
+      announce.textContent = "Project " + (index + 1) + " of " + items.length + ", " + title;
       $("[data-prev]").disabled = turning || index === 0;
       $("[data-next]").disabled = turning || index === items.length - 1;
       UI.$$("button", indexList).forEach(function (b, i) {
         if (i === index) b.setAttribute("aria-current", "true");
         else b.removeAttribute("aria-current");
       });
-    }
-
-    /* Called from site.js after a language switch — redraws the current
-       spread and index list in the new language without disturbing which
-       project is open or any turn currently in flight. */
-    function rerender() {
-      buildIndex();
-      if (!turning) { setLeft(index); setRight(index); }
-      setChrome();
     }
 
     /* ---- Turning ---------------------------------------------------------- */
@@ -366,8 +352,6 @@
     setLeft(index);
     setRight(index);
     setChrome();
-
-    return { rerender: rerender };
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -377,7 +361,6 @@
     var items = (D.sketchbook || []).slice();
     if (!items.length) { root.hidden = true; return; }
 
-    var book = init(root, items);
-    window.SVSketchbook = { rerender: book.rerender };
+    init(root, items);
   });
 })();

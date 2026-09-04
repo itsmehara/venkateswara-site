@@ -51,7 +51,7 @@ window.SV = (function () {
       title: "T-Shirt &amp; Garment Printing",
       short: "Screen printing on tees, polos and jerseys",
       blurb: "Single colour or full multi-colour artwork, printed to hold its " +
-             "shape through wash after wash. Event tees,team kits, college " +
+             "shape through wash after wash. Event tees, team kits, college " +
              "batches, family functions.",
       icon: "tshirt",
       image: "assets/img/products/tshirt-legends-flatlay_a.webp",
@@ -240,21 +240,6 @@ window.SV = (function () {
       alt: "A flat-lay of caps in several colours, centre ones carrying a logo",
       note: "Both finishes, side by side, on one order.",
       spec: "Sample showing print and embroidery options."
-    },
-    {
-      id: "caps-order-ready",
-      title: "Bulk Order, Packed",
-      category: "caps",
-      image: "assets/img/products/caps-bulk-white-order-ready-branded-v2.webp",
-      provenance: "mock",
-      /* The names and logos shown on these sample caps are demonstration
-         graphics, not real customers — do not name any of them in copy,
-         even with a "sample" label. That would misrepresent them as real
-         business relationships rather than illustrations of what a bulk
-         order can look like once branded. */
-      alt: "Rows of white caps packed in plastic behind five sample-branded caps in front, showing school, business and event logo placements",
-      note: "A full bulk order, counted and packed, with a few caps shown branded as samples of school, business and event logo placement.",
-      spec: "Sample branding shown on stock; the packed quantity behind is real bulk-order presentation."
     },
     {
       id: "jute-wedding-pair",

@@ -61,183 +61,6 @@
     return null;
   }
 
-  /* ---- Language ------------------------------------------------------------ */
-  /* English is the site's actual markup — it is never fetched or replaced,
-     only left alone. Telugu, Hindi and Spanish are separate JSON files
-     (assets/i18n/<locale>.json), each holding just that one language's
-     strings, so a visitor only ever downloads the one language they asked
-     for. A missing key at any point below falls back to whatever English
-     text is already in the DOM or in data.js — never a raw lookup key. */
-  var LOCALE_KEY = "sv-language-v1";
-  var LOCALES = {
-    en: { name: "English",  dir: "ltr" },
-    te: { name: "తెలుగు",   dir: "ltr" },
-    hi: { name: "हिन्दी",    dir: "ltr" },
-    es: { name: "Español",  dir: "ltr" }
-  };
-  var I18N = null;      /* the loaded dictionary, or null for English */
-  var LOCALE = "en";
-
-  function savedLocale() {
-    try {
-      var v = localStorage.getItem(LOCALE_KEY);
-      return LOCALES[v] ? v : null;
-    } catch (err) { return null; }
-  }
-  function saveLocale(loc) {
-    try { localStorage.setItem(LOCALE_KEY, loc); } catch (err) { /* fine */ }
-  }
-
-  /* Reads a dotted path ("pages.home.headline1") out of the loaded
-     dictionary. Returns null (never throws, never returns a lookup key) if
-     the path is missing or the value is not a translated string. */
-  function tr(path) {
-    if (!I18N) return null;
-    var parts = path.split(".");
-    var v = I18N;
-    for (var i = 0; i < parts.length; i++) {
-      if (v == null || typeof v !== "object") return null;
-      v = v[parts[i]];
-    }
-    return typeof v === "string" ? v : null;
-  }
-  /* Same lookup, with {placeholder} substitution for the handful of runtime
-     strings that carry one (a slide number, a project count, a title). */
-  function trf(path, vars) {
-    var s = tr(path);
-    if (s == null) return null;
-    return s.replace(/\{(\w+)\}/g, function (m, k) {
-      return vars && vars[k] != null ? vars[k] : m;
-    });
-  }
-
-  /* Applies every [data-i18n] element on the current page. Telugu/Devanagari
-     need their own typefaces — the Latin display face this site otherwise
-     uses does not cover those scripts — so a class carrying the right
-     font-family is toggled on <html> alongside the lang attribute rather
-     than duplicated per element. */
-  /* Fetched only the first time a script that needs it is selected — an
-     English or Spanish visitor never pays for these, matching how the
-     locale JSON itself only loads for the language actually chosen. */
-  var SCRIPT_FONTS = {
-    te: "https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;600;700;800&display=swap",
-    hi: "https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&display=swap"
-  };
-  var loadedScriptFonts = {};
-  function ensureScriptFont(loc) {
-    var href = SCRIPT_FONTS[loc];
-    if (!href || loadedScriptFonts[loc]) return;
-    loadedScriptFonts[loc] = true;
-    var link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  }
-
-  function applyStaticI18n() {
-    document.documentElement.lang = LOCALE;
-    document.documentElement.classList.toggle("lang-te", LOCALE === "te");
-    document.documentElement.classList.toggle("lang-hi", LOCALE === "hi");
-    ensureScriptFont(LOCALE);
-
-    /* Switching locale back to English has no JSON to read — tr() always
-       returns null — so English is restored from a snapshot of each
-       element's own original value taken the first time it's ever touched,
-       rather than by trying to re-derive "the English" from nothing. */
-    $$("[data-i18n]").forEach(function (el) {
-      if (el.dataset.i18nEn == null) el.dataset.i18nEn = el.textContent;
-      el.textContent = tr(el.getAttribute("data-i18n")) || el.dataset.i18nEn;
-    });
-    /* A handful of headings carry a line break as a literal newline in the
-       translation JSON (matching how they're written in the te/hi source
-       bundle) rather than markup — data-i18n-html holds its own path (not a
-       modifier on data-i18n) and means "this key may contain one of those",
-       so it gets turned into a real <br> here instead of asking every
-       translated string to carry HTML. */
-    $$("[data-i18n-html]").forEach(function (el) {
-      if (el.dataset.i18nEn == null) el.dataset.i18nEn = el.innerHTML;
-      var val = tr(el.getAttribute("data-i18n-html"));
-      el.innerHTML = val != null ? esc(val).replace(/\n/g, "<br>") : el.dataset.i18nEn;
-    });
-    $$("[data-i18n-attr]").forEach(function (el) {
-      var spec = el.getAttribute("data-i18n-attr").split(":");
-      if (el.dataset.i18nEn == null) el.dataset.i18nEn = el.getAttribute(spec[0]) || "";
-      el.setAttribute(spec[0], tr(spec[1]) || el.dataset.i18nEn);
-    });
-    /* The hero's per-slide captions live in a data-caption attribute (read
-       by initHero()'s show()), not in text content, so they need their own
-       pass rather than the generic [data-i18n] walk above. */
-    var captions = I18N && I18N.pages && I18N.pages.home && I18N.pages.home.heroCaptions;
-    $$(".hero-slide").forEach(function (s, n) {
-      if (s.dataset.captionEn == null) s.dataset.captionEn = s.getAttribute("data-caption") || "";
-      s.setAttribute("data-caption", (captions && captions[n]) || s.dataset.captionEn);
-    });
-    var activeCap = $(".hero-slide.is-active");
-    var capEl = $(".hero-caption");
-    if (activeCap && capEl) capEl.textContent = activeCap.getAttribute("data-caption") || "";
-    $$(".hero-dots button").forEach(function (b, n) {
-      var label = $(".visually-hidden", b);
-      if (label) label.textContent = trf("runtime.heroSlide", { index: n + 1 }) || ("Slide " + (n + 1));
-    });
-  }
-
-  function buildLangSwitch() {
-    var host = $("[data-lang-switch]");
-    if (!host) return;
-    host.innerHTML = Object.keys(LOCALES).map(function (code) {
-      return '<button type="button" data-lang="' + code + '" aria-pressed="' + (code === LOCALE) + '" lang="' + code + '">' +
-        esc(LOCALES[code].name) + '</button>';
-    }).join("");
-    host.addEventListener("click", function (e) {
-      var b = e.target.closest("[data-lang]");
-      if (!b) return;
-      var code = b.getAttribute("data-lang");
-      if (code === LOCALE) return;
-      saveLocale(code);
-      switchLocale(code);
-    });
-  }
-  function syncLangSwitch() {
-    $$("[data-lang-switch] [data-lang]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === LOCALE));
-    });
-  }
-
-  /* Loads a locale's JSON (or clears it, for English) and hands back to
-     `done` once LOCALE/I18N are ready to read — for both success and
-     failure (a fetch error on a slow or offline connection should leave
-     the page in English, not stuck on a spinner). Pure load: no rendering,
-     so this is safe to call before any of the page's one-time setup runs. */
-  function loadLocaleData(loc, done) {
-    LOCALE = LOCALES[loc] ? loc : "en";
-    if (LOCALE === "en") { I18N = null; done(); return; }
-    fetch("assets/i18n/" + LOCALE + ".json", { cache: "force-cache" })
-      .then(function (r) { if (!r.ok) throw new Error("locale fetch failed"); return r.json(); })
-      .then(function (json) { I18N = json; done(); })
-      .catch(function () { I18N = null; done(); });
-  }
-
-  /* Re-renders everything that reads from I18N. Used after the initial load
-     (once, as part of the page's normal render) and again on every language
-     switch — re-rendering in place rather than reloading the page keeps the
-     enquiry list, any typed quote-form input, and scroll position intact. */
-  function retranslate() {
-    applyStaticI18n();
-    renderServices();
-    renderPromises();
-    renderWork();
-    Quote.render();
-    if (window.SVSketchbook) window.SVSketchbook.rerender();
-    syncLangSwitch();
-  }
-
-  /* The language-switcher entry point: only this one re-runs render after
-     load, because only this one fires after the page's one-time setup
-     (event listeners, the hero's timer) already happened once. */
-  function switchLocale(loc) {
-    loadLocaleData(loc, retranslate);
-  }
-
   /* ---- Header ------------------------------------------------------------ */
   function initHeader() {
     var header = $(".site-header");
@@ -295,7 +118,7 @@
     if (dotsWrap) {
       dotsWrap.innerHTML = slides.map(function (s, n) {
         return '<button type="button" data-slide="' + n + '">' +
-          '<span class="visually-hidden">' + esc(trf("runtime.heroSlide", { index: n + 1 }) || ("Slide " + (n + 1))) + '</span></button>';
+          '<span class="visually-hidden">' + esc("Slide " + (n + 1)) + '</span></button>';
       }).join("");
     }
 
@@ -436,6 +259,25 @@
       return;
     }
 
+    /* Anything already sitting in (or above) the viewport at load time is
+       "visible content", not "content you're about to scroll to" — reveal
+       it immediately, with no fade, so the first screen never reads as
+       still loading. Only content genuinely below the fold gets the
+       scroll-triggered animation. */
+    var vh = window.innerHeight;
+    var toObserve = [];
+    targets.forEach(function (t) {
+      if (t.getBoundingClientRect().top < vh) {
+        /* is-in-instant drops the transition entirely (not just the
+           delay) — this content is on screen right now, at load, so it
+           should just be there rather than visibly fade in a moment later. */
+        t.classList.add("is-in", "is-in-instant");
+      } else {
+        toObserve.push(t);
+      }
+    });
+    if (!toObserve.length) return;
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (!en.isIntersecting) return;
@@ -444,7 +286,7 @@
       });
     }, { rootMargin: "0px 0px -8% 0px", threshold: .08 });
 
-    targets.forEach(function (t) { io.observe(t); });
+    toObserve.forEach(function (t) { io.observe(t); });
   }
 
   /* ---- Lightbox ----------------------------------------------------------- */
@@ -457,23 +299,21 @@
       box.setAttribute("role", "dialog");
       box.setAttribute("aria-modal", "true");
       box.setAttribute("aria-label", "Larger view");
-      box.setAttribute("data-i18n-attr", "aria-label:runtime.lightbox.largerView");
       box.innerHTML =
         '<button type="button" class="lightbox-close" data-close>' +
           '<span aria-hidden="true">&times;</span>' +
-          '<span class="visually-hidden" data-i18n="common.actions.close">Close</span></button>' +
+          '<span class="visually-hidden">Close</span></button>' +
         '<button type="button" class="lightbox-nav lightbox-nav--prev" data-prev>' +
           '<span aria-hidden="true">&lsaquo;</span>' +
-          '<span class="visually-hidden" data-i18n="common.actions.previous">Previous</span></button>' +
+          '<span class="visually-hidden">Previous</span></button>' +
         '<button type="button" class="lightbox-nav lightbox-nav--next" data-next>' +
           '<span aria-hidden="true">&rsaquo;</span>' +
-          '<span class="visually-hidden" data-i18n="common.actions.next">Next</span></button>' +
+          '<span class="visually-hidden">Next</span></button>' +
         '<figure class="lightbox-figure">' +
           '<img data-img decoding="async" src="" alt="">' +
           '<figcaption data-cap></figcaption>' +
         '</figure>';
       document.body.appendChild(box);
-      applyStaticI18n();   /* built lazily, may happen after a locale switch */
 
       box.addEventListener("click", function (e) {
         if (e.target.closest("[data-close]") || e.target === box) return close();
@@ -491,14 +331,14 @@
     function render() {
       var it = items[index];
       if (!it) return;
-      var title = tr("work." + it.id + ".title") || it.title;
-      var alt   = tr("work." + it.id + ".alt")   || it.alt;
-      var note  = tr("work." + it.id + ".note")  || it.note;
+      var title = it.title;
+      var alt   = it.alt;
+      var note  = it.note;
       $("[data-img]", box).src = it.image;
       $("[data-img]", box).alt = alt || plain(title);
       $("[data-cap]", box).textContent =
         plain(title) + (note ? " — " + plain(note) : "") +
-        (it.provenance === "mock" ? "  " + (tr("runtime.lightbox.sampleSuffix") || "(Sample presentation, not a photograph of stock.)") : "");
+        (it.provenance === "mock" ? "  (Sample presentation, not a photograph of stock.)" : "");
       var many = items.length > 1;
       $("[data-prev]", box).hidden = !many;
       $("[data-next]", box).hidden = !many;
@@ -540,24 +380,24 @@
 
     function waLink() {
       var b = D.business;
-      var lines = [(tr("runtime.whatsappMessage.greeting") || "Hello Sri Venkateswara Printing Works,"), ""];
+      var lines = ["Hello Sri Venkateswara Printing Works,", ""];
 
       if (ids.length) {
-        lines.push(tr("runtime.whatsappMessage.quoteFor") || "I would like a quotation for:");
+        lines.push("I would like a quotation for:");
         ids.forEach(function (id, n) {
           var it = itemById(id);
-          if (it) lines.push((n + 1) + ". " + plain(tr("work." + id + ".title") || it.title));
+          if (it) lines.push((n + 1) + ". " + plain(it.title));
         });
       } else {
-        lines.push(tr("runtime.whatsappMessage.general") || "I would like to ask about your printing work.");
+        lines.push("I would like to ask about your printing work.");
       }
 
       var who = nameField && nameField.value.trim();
       var note = noteField && noteField.value.trim();
-      if (note) { lines.push("", (tr("runtime.whatsappMessage.details") || "Details:") + " " + note); }
-      if (who)  { lines.push("", (tr("runtime.whatsappMessage.myName") || "My name:") + " " + who); }
+      if (note) { lines.push("", "Details: " + note); }
+      if (who)  { lines.push("", "My name: " + who); }
 
-      lines.push("", tr("runtime.whatsappMessage.sentFromSite") || "(Sent from your website)");
+      lines.push("", "(Sent from your website)");
 
       return "https://wa.me/" + b.whatsapp + "?text=" + encodeURIComponent(lines.join("\n"));
     }
@@ -567,24 +407,22 @@
 
       if (!ids.length) {
         list.innerHTML =
-          '<li class="quote-empty"><strong>' + esc(tr("runtime.enquiry.emptyTitle") || "Nothing added yet") + '</strong>' +
-          esc(tr("runtime.enquiry.emptyBody") ||
-            'Browse the work and press “Add to enquiry” on anything close to ' +
+          '<li class="quote-empty"><strong>' + esc("Nothing added yet") + '</strong>' +
+          esc('Browse the work and press “Add to enquiry” on anything close to ' +
             'what you need. Send them all to Venkatesh in one message.') + '</li>';
       } else {
         list.innerHTML = ids.map(function (id) {
           var it = itemById(id);
           if (!it) return "";
-          var title = tr("work." + id + ".title") || it.title;
-          var provLabel = it.provenance === "mock" ? (tr("common.provenance.sample") || "Sample")
-                                                     : (tr("common.provenance.real") || "Delivered work");
+          var title = it.title;
+          var provLabel = it.provenance === "mock" ? "Sample" : "Delivered work";
           return '<li class="quote-item">' +
             '<img src="' + esc(it.image) + '" alt="" loading="lazy" decoding="async">' +
             '<div><div class="quote-item-name">' + title + '</div>' +
               '<div class="quote-item-meta">' + esc(provLabel) + '</div></div>' +
             '<button type="button" class="quote-remove" data-remove="' + esc(id) + '">' +
               '<span aria-hidden="true">&times;</span>' +
-              '<span class="visually-hidden">' + esc(trf("runtime.enquiry.removeAria", { title: plain(title) }) || ("Remove " + plain(title))) + '</span></button>' +
+              '<span class="visually-hidden">' + esc("Remove " + plain(title)) + '</span></button>' +
           '</li>';
         }).join("");
       }
@@ -597,8 +435,7 @@
         var on = ids.indexOf(b.getAttribute("data-add")) !== -1;
         b.setAttribute("aria-pressed", String(on));
         var label = $(".btn-add-text", b);
-        if (label) label.textContent = on ? (tr("common.actions.added") || "Added")
-                                           : (tr("common.actions.addEnquiry") || "Add to enquiry");
+        if (label) label.textContent = on ? "Added" : "Add to enquiry";
       });
 
       var send = $("[data-send]");
@@ -615,8 +452,8 @@
         fab.classList.add("is-bumped");
       }
       var it = itemById(id);
-      var title = plain((it && (tr("work." + id + ".title") || it.title)) || "");
-      announce(trf("runtime.enquiry.addedAnnouncement", { title: title }) || (title + " added to your enquiry."));
+      var title = plain((it && it.title) || "");
+      announce(title + " added to your enquiry.");
     }
 
     function remove(id) {
@@ -705,8 +542,8 @@
     dock.className = "dock";
     dock.innerHTML =
       '<a class="wa-fab" data-wa-link href="#" target="_blank" rel="noopener">' +
-        '<span class="fab-label" data-i18n="runtime.whatsappDock.chat">Chat on WhatsApp</span>' + waIcon() +
-        '<span class="visually-hidden" data-i18n="runtime.whatsappDock.aria">Chat with us on WhatsApp (opens WhatsApp)</span></a>' +
+        '<span class="fab-label">Chat on WhatsApp</span>' + waIcon() +
+        '<span class="visually-hidden">Chat with us on WhatsApp (opens WhatsApp)</span></a>' +
 
       '<button type="button" class="quote-fab" data-empty="true" aria-expanded="false" ' +
         'aria-controls="quote-panel">' +
@@ -714,9 +551,9 @@
           'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
           '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>' +
           '<path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' +
-        '<span class="fab-text" data-i18n="runtime.enquiry.myEnquiry">My enquiry</span>' +
+        '<span class="fab-text">My enquiry</span>' +
         '<span class="quote-count">0</span>' +
-        '<span class="visually-hidden" data-i18n="runtime.enquiry.openList">Open your enquiry list</span>' +
+        '<span class="visually-hidden">Open your enquiry list</span>' +
       '</button>';
 
     var panel = document.createElement("div");
@@ -724,31 +561,28 @@
     panel.id = "quote-panel";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", "Your enquiry list");
-    panel.setAttribute("data-i18n-attr", "aria-label:runtime.enquiry.listTitle");
     panel.innerHTML =
       '<div class="quote-head">' +
-        '<h2 data-i18n="runtime.enquiry.listTitle">Your enquiry</h2>' +
+        '<h2>Your enquiry</h2>' +
         '<button type="button" class="quote-close" data-quote-close>' +
           '<span aria-hidden="true">&times;</span>' +
-          '<span class="visually-hidden" data-i18n="common.actions.close">Close</span></button>' +
+          '<span class="visually-hidden">Close</span></button>' +
       '</div>' +
       '<ul class="quote-items"></ul>' +
       '<div class="quote-foot">' +
         '<div>' +
-          '<label for="q-name" data-i18n="runtime.enquiry.nameLabel">Name (optional)</label>' +
+          '<label for="q-name">Name (optional)</label>' +
           '<input id="q-name" type="text" data-quote-name autocomplete="name" ' +
-                 'placeholder="So Venkatesh knows who is asking" ' +
-                 'data-i18n-attr="placeholder:runtime.enquiry.nameHint">' +
+                 'placeholder="So Venkatesh knows who is asking">' +
         '</div>' +
         '<div>' +
-          '<label for="q-note" data-i18n="runtime.enquiry.detailsLabel">Qty, sizes, colours</label>' +
+          '<label for="q-note">Qty, sizes, colours</label>' +
           '<textarea id="q-note" rows="1" data-quote-note ' +
-            'placeholder="e.g. 60 polos, mixed sizes, logo on chest" ' +
-            'data-i18n-attr="placeholder:runtime.enquiry.detailsExample"></textarea>' +
+            'placeholder="e.g. 60 polos, mixed sizes, logo on chest"></textarea>' +
         '</div>' +
         '<a class="btn btn--block quote-send" data-send href="#" target="_blank" rel="noopener">' +
-          waIcon() + '<span data-i18n="runtime.enquiry.send">Send on WhatsApp</span></a>' +
-        '<p class="quote-disclaimer muted" data-i18n="runtime.enquiry.privacy">Opens WhatsApp — nothing sends until you press it there.</p>' +
+          waIcon() + '<span>Send on WhatsApp</span></a>' +
+        '<p class="quote-disclaimer muted">Opens WhatsApp — nothing sends until you press it there.</p>' +
       '</div>' +
       '<p class="visually-hidden" role="status" aria-live="polite" data-quote-live></p>';
 
@@ -784,7 +618,7 @@
     });
     $$("[data-wa-link]").forEach(function (el) {
       el.href = "https://wa.me/" + b.whatsapp + "?text=" + encodeURIComponent(
-        tr("runtime.whatsappMessage.generalDock") || "Hello Sri Venkateswara Printing Works, I have an enquiry.");
+        "Hello Sri Venkateswara Printing Works, I have an enquiry.");
     });
   }
 
@@ -792,12 +626,11 @@
   /* Used by the home page (a few) and the work page (all of them). */
   function workCard(it) {
     var isMock = it.provenance === "mock";
-    var title = tr("work." + it.id + ".title") || it.title;
-    var alt   = tr("work." + it.id + ".alt")   || it.alt;
-    var note  = tr("work." + it.id + ".note")  || it.note;
-    var spec  = tr("work." + it.id + ".spec")  || it.spec;
-    var provLabel = isMock ? (tr("common.provenance.sample") || "Sample")
-                            : (tr("common.provenance.real") || "Delivered work");
+    var title = it.title;
+    var alt   = it.alt;
+    var note  = it.note;
+    var spec  = it.spec;
+    var provLabel = isMock ? "Sample" : "Delivered work";
     return '<article class="card" data-cat="' + esc(it.category) + '" data-reveal>' +
       '<div class="card-media grain">' +
         '<span class="badge badge--' + (isMock ? "mock" : "real") + '">' + esc(provLabel) + '</span>' +
@@ -812,7 +645,7 @@
           '<button type="button" class="btn-add" data-add="' + esc(it.id) + '" ' +
                   'aria-pressed="false">' +
             '<span aria-hidden="true">+</span>' +
-            '<span class="btn-add-text">' + esc(tr("common.actions.addEnquiry") || "Add to enquiry") + '</span></button>' +
+            '<span class="btn-add-text">' + esc("Add to enquiry") + '</span></button>' +
         '</div>' +
       '</div>' +
     '</article>';
@@ -843,10 +676,10 @@
     var filters = $("[data-work-filters]");
     if (!filters) return;
 
-    var cats = [{ id: "all", title: tr("pages.work.everything") || "Everything" }].concat(
+    var cats = [{ id: "all", title: "Everything" }].concat(
       D.services.filter(function (s) {
         return D.work.some(function (w) { return w.category === s.id; });
-      }).map(function (s) { return { id: s.id, title: tr("services." + s.id + ".label") || s.label }; })
+      }).map(function (s) { return { id: s.id, title: s.label }; })
     );
 
     filters.innerHTML = cats.map(function (c, n) {
@@ -875,9 +708,9 @@
     var items = limit ? D.services.slice(0, limit) : D.services;
 
     host.innerHTML = items.map(function (s, n) {
-      var title = tr("services." + s.id + ".title") || s.title;
-      var blurb = tr("services." + s.id + ".blurb") || s.blurb;
-      var points = (I18N && I18N.services && I18N.services[s.id] && I18N.services[s.id].points) || s.points;
+      var title = s.title;
+      var blurb = s.blurb;
+      var points = s.points;
       return '<article class="service" data-n="' + (n < 9 ? "0" : "") + (n + 1) + '" ' +
              'id="' + esc(s.id) + '" data-reveal data-reveal-delay="' + (n % 4) + '">' +
         '<h3>' + title + '</h3>' +
@@ -890,7 +723,7 @@
   function renderPromises() {
     var host = $("[data-promises]");
     if (!host) return;
-    var items = (I18N && I18N.promises) || D.promises;
+    var items = D.promises;
     host.innerHTML = items.map(function (p, n) {
       return '<div class="promise" data-reveal data-reveal-delay="' + (n % 4) + '">' +
         "<h3>" + esc(p.title) + "</h3><p>" + esc(p.body) + "</p></div>";
@@ -909,9 +742,9 @@
     var select = $("[data-service-select]", form);
     if (select) {
       select.insertAdjacentHTML("beforeend", D.services.map(function (s) {
-        var title = plain(tr("services." + s.id + ".title") || s.title);
+        var title = plain(s.title);
         return '<option value="' + esc(title) + '">' + esc(title) + '</option>';
-      }).join("") + '<option value="Something else">' + esc(tr("runtime.quoteForm.somethingElse") || "Something else") + '</option>');
+      }).join("") + '<option value="Something else">' + esc("Something else") + '</option>');
     }
 
     var REQUIRED = ["name", "phone", "service", "quantity"];
@@ -956,18 +789,16 @@
       ["name", "phone", "service", "quantity", "sizes", "colours", "artwork", "deadline", "notes"]
         .forEach(function (name) { var f = field(name); v[name] = f ? String(f.value || "").trim() : ""; });
 
-      var lines = [(tr("runtime.whatsappMessage.greeting") || "Hello Sri Venkateswara Printing Works,"), "",
-        (tr("runtime.whatsappMessage.quoteFor") || "I would like a quotation for:")];
-      lines.push((tr("runtime.quoteForm.itemLabel") || "Item/service:") + " " + v.service);
-      lines.push((tr("runtime.quoteForm.quantityLabel") || "Quantity:") + " " + v.quantity);
-      if (v.sizes)    lines.push((tr("runtime.quoteForm.sizesLabel") || "Sizes:") + " " + v.sizes);
-      if (v.colours)  lines.push((tr("runtime.quoteForm.coloursLabel") || "Colours:") + " " + v.colours);
-      if (v.artwork)  lines.push((tr("runtime.quoteForm.artworkLabel") || "Artwork:") + " " + v.artwork);
-      if (v.deadline) lines.push((tr("runtime.quoteForm.deadlineLabel") || "Deadline:") + " " + formatDeadline(v.deadline));
-      if (v.notes)    lines.push((tr("runtime.quoteForm.notesLabel") || "Notes:") + " " + v.notes);
-      lines.push("", (tr("runtime.whatsappMessage.myName") || "My name:") + " " + v.name,
-        (tr("runtime.quoteForm.myPhoneLabel") || "My phone:") + " " + v.phone);
-      lines.push("", tr("runtime.whatsappMessage.sentFromSite") || "(Sent from your website)");
+      var lines = ["Hello Sri Venkateswara Printing Works,", "", "I would like a quotation for:"];
+      lines.push("Item/service: " + v.service);
+      lines.push("Quantity: " + v.quantity);
+      if (v.sizes)    lines.push("Sizes: " + v.sizes);
+      if (v.colours)  lines.push("Colours: " + v.colours);
+      if (v.artwork)  lines.push("Artwork: " + v.artwork);
+      if (v.deadline) lines.push("Deadline: " + formatDeadline(v.deadline));
+      if (v.notes)    lines.push("Notes: " + v.notes);
+      lines.push("", "My name: " + v.name, "My phone: " + v.phone);
+      lines.push("", "(Sent from your website)");
 
       return "https://wa.me/" + b.whatsapp + "?text=" + encodeURIComponent(lines.join("\n"));
     }
@@ -980,10 +811,10 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (!validate()) {
-        announce(tr("runtime.quoteForm.invalidAnnounce") || "Please fill in the highlighted fields before sending.");
+        announce("Please fill in the highlighted fields before sending.");
         return;
       }
-      announce(tr("runtime.quoteForm.openingAnnounce") || "Opening WhatsApp with your quote request.");
+      announce("Opening WhatsApp with your quote request.");
       window.open(waLink(), "_blank", "noopener");
     });
 
@@ -1001,30 +832,16 @@
 
   /* ---- Go ------------------------------------------------------------------ */
   document.addEventListener("DOMContentLoaded", function () {
-    buildLangSwitch();
-    loadLocaleData(savedLocale() || "en", function () {
-      fillCommon();
-      renderDock();
-      initHeader();
-      renderServices();
-      renderPromises();
-      renderWork();
-      initHero();
-      Quote.init();
-      initQuoteForm();
-      initReveal();
-      applyStaticI18n();
-      /* The Design Book (sketchbook.js) registers its own DOMContentLoaded
-         listener and always runs its first render before this fetch can
-         possibly resolve — English every time, saved locale or not — so a
-         saved non-English locale needs one explicit correction pass here,
-         same as switchLocale() already does for a later, user-triggered
-         change. window.SVSketchbook is guaranteed set by this point: fetch
-         callbacks never run until the synchronous DOMContentLoaded dispatch
-         (which is what sets it) has fully finished. */
-      if (window.SVSketchbook) window.SVSketchbook.rerender();
-      syncLangSwitch();
-    });
+    fillCommon();
+    renderDock();
+    initHeader();
+    renderServices();
+    renderPromises();
+    renderWork();
+    initHero();
+    Quote.init();
+    initQuoteForm();
+    initReveal();
   });
 
   /* The sketchbook loads after this file and needs the same helpers. */
@@ -1032,8 +849,6 @@
     esc: esc, plain: plain, $: $, $$: $$,
     reduceMotion: reduceMotion,
     Lightbox: Lightbox,
-    Quote: Quote,
-    tr: tr, trf: trf, applyStaticI18n: applyStaticI18n,
-    currentLocale: function () { return LOCALE; }
+    Quote: Quote
   };
 })();
