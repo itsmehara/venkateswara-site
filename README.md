@@ -39,7 +39,13 @@ assets/css/sketchbook.css   Design Book layout, material, and turn presentation
 assets/js/data.js           Business details, 7 services, 18 projects, promises
 assets/js/site.js           Navigation, hero, gallery, lightbox, enquiry, bindings
 assets/js/sketchbook.js     Design Book rendering and page-turn interactions
-assets/img/                 37 web-ready brand, hero, product, and texture files
+assets/img/                 36 files: .webp for every photo actually served,
+                             plus one .jpg (homepage-hero-core-products.jpg,
+                             kept for WhatsApp/Facebook link-preview crawlers
+                             that don't render webp) and the brand logo .png.
+                             Original higher-res .jpg source files live in
+                             the workspace repo's images/site-jpg-originals/,
+                             not here — see that folder's README.
 *.html                      Six directly served pages
 robots.txt                  Crawler rules and sitemap location
 sitemap.xml                 Six-page sitemap; final domain still required

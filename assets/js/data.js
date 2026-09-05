@@ -43,6 +43,17 @@ window.SV = (function () {
     hours: null
   };
 
+  /* ---- Enquiry logging (Google Sheets) ------------------------------------
+     Every enquiry the site sends to WhatsApp (the quote form, the enquiry
+     drawer, the plain "Ask on WhatsApp" links) is also posted here so it is
+     never lost if a WhatsApp message goes unread. Paste in the /exec URL
+     from your deployed Google Apps Script Web App — the script and its
+     one-time Google Sheets setup steps live in the workspace repo at
+     scripts/google-apps-script/ (not shipped in this public site repo).
+     Leave empty to disable logging (WhatsApp still works either way; this
+     is a best-effort copy, not a requirement). */
+  var enquiryLogUrl = "";
+
   /* ---- What the shop does ------------------------------------------------ */
   var services = [
     {
@@ -393,6 +404,7 @@ window.SV = (function () {
     services: services,
     work: work,
     sketchbook: sketchbook,
-    promises: promises
+    promises: promises,
+    enquiryLogUrl: enquiryLogUrl
   };
 })();

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace REPLACE-WITH-YOUR-DOMAIN with the published address once the
-     site is live (for GitHub Pages that is https://<user>.github.io/<repo>). -->
+<!-- Update this to the custom domain once one is wired up (swap
+     itsmehara.github.io/venkateswara-site for the new domain everywhere
+     below, and drop /venkateswara-site since a custom domain serves from
+     the root). -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://REPLACE-WITH-YOUR-DOMAIN/index.html</loc><priority>1.0</priority></url>
-  <url><loc>https://REPLACE-WITH-YOUR-DOMAIN/services.html</loc><priority>0.9</priority></url>
-  <url><loc>https://REPLACE-WITH-YOUR-DOMAIN/work.html</loc><priority>0.9</priority></url>
-  <url><loc>https://REPLACE-WITH-YOUR-DOMAIN/sketchbook.html</loc><priority>0.7</priority></url>
-  <url><loc>https://REPLACE-WITH-YOUR-DOMAIN/about.html</loc><priority>0.6</priority></url>
-  <url><loc>https://REPLACE-WITH-YOUR-DOMAIN/contact.html</loc><priority>0.9</priority></url>
+  <url><loc>https://itsmehara.github.io/venkateswara-site/index.html</loc><priority>1.0</priority></url>
+  <url><loc>https://itsmehara.github.io/venkateswara-site/services.html</loc><priority>0.9</priority></url>
+  <url><loc>https://itsmehara.github.io/venkateswara-site/work.html</loc><priority>0.9</priority></url>
+  <url><loc>https://itsmehara.github.io/venkateswara-site/sketchbook.html</loc><priority>0.7</priority></url>
+  <url><loc>https://itsmehara.github.io/venkateswara-site/about.html</loc><priority>0.6</priority></url>
+  <url><loc>https://itsmehara.github.io/venkateswara-site/contact.html</loc><priority>0.9</priority></url>
 </urlset>

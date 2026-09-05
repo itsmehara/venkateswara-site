@@ -61,6 +61,34 @@
     return null;
   }
 
+  /* ---- Enquiry logging (Google Sheets) ------------------------------------
+     Best-effort copy of every enquiry into the sheet behind D.enquiryLogUrl,
+     alongside the WhatsApp message that is the enquiry itself. `keepalive`
+     lets the request finish even though the click that triggers it is about
+     to navigate to wa.me or open a new tab; `no-cors` + a text/plain body is
+     what lets a static page POST to Apps Script without a CORS preflight
+     Apps Script cannot answer. Never blocks or delays the WhatsApp link —
+     if this fails silently, the enquiry still reaches WhatsApp. */
+  function logEnquiry(source, fields) {
+    var url = D.enquiryLogUrl;
+    if (!url) return;
+    var payload = {
+      source: source,
+      page: location.pathname.replace(/^\/|\/$/g, "") || "index",
+      time: new Date().toISOString(),
+      fields: fields || {}
+    };
+    try {
+      fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        keepalive: true,
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) { /* best-effort only */ }
+  }
+
   /* ---- Header ------------------------------------------------------------ */
   function initHeader() {
     var header = $(".site-header");
@@ -496,6 +524,20 @@
         toggle(false); fab.focus();
       });
 
+      var send = $("[data-send]", panel);
+      if (send) {
+        send.addEventListener("click", function () {
+          logEnquiry("enquiry-drawer", {
+            name: (nameField && nameField.value.trim()) || "",
+            notes: (noteField && noteField.value.trim()) || "",
+            items: ids.map(function (id) {
+              var it = itemById(id);
+              return it ? plain(it.title) : id;
+            }).join("; ")
+          });
+        });
+      }
+
       panel.addEventListener("click", function (e) {
         var rm = e.target.closest("[data-remove]");
         if (rm) remove(rm.getAttribute("data-remove"));
@@ -677,6 +719,7 @@
     $$("[data-wa-link]").forEach(function (el) {
       el.href = "https://wa.me/" + b.whatsapp + "?text=" + encodeURIComponent(
         "Hello Sri Venkateswara Printing Works, I have an enquiry.");
+      el.addEventListener("click", function () { logEnquiry("whatsapp-link", {}); });
     });
   }
 
@@ -898,12 +941,15 @@
       return m ? (m[3] + "/" + m[2] + "/" + m[1]) : iso;
     }
 
-    function waLink() {
-      var b = D.business;
+    function collectFields() {
       var v = {};
       ["name", "phone", "service", "quantity", "sizes", "colours", "artwork", "deadline", "notes"]
         .forEach(function (name) { var f = field(name); v[name] = f ? String(f.value || "").trim() : ""; });
+      return v;
+    }
 
+    function waLink(v) {
+      var b = D.business;
       var lines = ["Hello Sri Venkateswara Printing Works,", "", "I would like a quotation for:"];
       lines.push("Item/service: " + v.service);
       lines.push("Quantity: " + v.quantity);
@@ -929,8 +975,10 @@
         announce("Please fill in the highlighted fields before sending.");
         return;
       }
+      var v = collectFields();
+      logEnquiry("quote-form", v);
       announce("Opening WhatsApp with your quote request.");
-      window.open(waLink(), "_blank", "noopener");
+      window.open(waLink(v), "_blank", "noopener");
     });
 
     /* Clear a field's error as soon as it stops being the problem, rather
@@ -947,8 +995,8 @@
 
   /* ---- Go ------------------------------------------------------------------ */
   document.addEventListener("DOMContentLoaded", function () {
-    fillCommon();
     renderDock();
+    fillCommon();
     initHeader();
     renderServices();
     renderPromises();
