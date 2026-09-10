@@ -52,7 +52,7 @@ window.SV = (function () {
      scripts/google-apps-script/ (not shipped in this public site repo).
      Leave empty to disable logging (WhatsApp still works either way; this
      is a best-effort copy, not a requirement). */
-  var enquiryLogUrl = "";
+  var enquiryLogUrl = "https://script.google.com/macros/s/AKfycbwylimpXpz1otUgm5u93eXaVR_onTn8FZPv9BBV07r-Qqm6ZH-96bQSPeQ6sdiFQRNH6A/exec";
 
   /* ---- What the shop does ------------------------------------------------ */
   var services = [
